@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEPi Draft Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A130E;
+    --bg-2:#0D1A12;
+    --panel:#12211A;
+    --panel-2:#17281F;
+    --panel-3:#1E3327;
+    --line:#2C4536;
+    --line-soft:#1F3327;
+    --chalk:#F2EFE4;
+    --chalk-dim:#A9B7AB;
+    --chalk-faint:#6E7F72;
+    --amber:#E7A93C;
+    --amber-dim:#7C5C22;
+    --amber-bright:#F6C563;
+    --ink:#231603;
+    --qb:#E2624B;
+    --rb:#39B37E;
+    --wr:#5590E8;
+    --te:#B08CE0;
+    --k:#9FB0A4;
+    --dst:#C4964E;
+    --danger:#E2624B;
+    --radius:10px;
+    --radius-lg:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.014) 0px, rgba(255,255,255,0.014) 1px, transparent 1px, transparent 72px),
+      radial-gradient(ellipse 1400px 700px at 50% -10%, #10241A 0%, var(--bg) 60%);
+    color:var(--chalk);
+    font-family:'Barlow',sans-serif;
+    font-size:14.5px;
+    line-height:1.5;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--amber-bright); outline-offset:2px; border-radius:4px;}
+  .display{font-family:'Anton',sans-serif; letter-spacing:0.02em;}
+  .mono{font-family:'Space Mono',monospace;}
+
+  /* ---------- Scoreboard header ---------- */
+  .scoreboard{
+    background:linear-gradient(180deg,#122419,#0B1A12 88%);
+    border-bottom:1px solid var(--line);
+    box-shadow:0 1px 0 rgba(0,0,0,0.5), 0 10px 24px -12px rgba(0,0,0,0.6);
+    padding:16px 22px 0;
+    position:sticky; top:0; z-index:50;
+  }
+  .scoreboard-inner{
+    max-width:1360px; margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:18px; flex-wrap:wrap; padding-bottom:14px;
+  }
+  .brand{display:flex; align-items:center; gap:13px;}
+  .brand-mark{
+    width:44px;height:44px;border-radius:9px; flex-shrink:0;
+    background:linear-gradient(150deg,var(--amber-bright),var(--amber) 55%,#b9840f);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink); font-family:'Anton',sans-serif; font-size:18px; letter-spacing:0.01em;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.35), 0 5px 12px -3px rgba(231,169,60,0.4);
+  }
+  .brand-text h1{
+    font-family:'Anton',sans-serif; font-size:20px; margin:0; letter-spacing:0.02em;
+    color:var(--chalk); text-wrap:balance;
+  }
+  .brand-text span{font-size:11px; color:var(--chalk-dim); letter-spacing:0.1em; text-transform:uppercase;}
+  .clock{
+    display:flex; align-items:stretch; gap:0;
+    background:#081410; border:1px solid var(--line); border-radius:11px;
+    overflow:hidden; box-shadow:inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -12px 20px -14px rgba(0,0,0,0.6);
+  }
+  .clock-seg{padding:8px 20px; text-align:center; border-right:1px solid var(--line); min-width:88px;}
+  .clock-seg:last-child{border-right:none;}
+  .clock-label{font-size:9px; letter-spacing:0.14em; color:var(--chalk-faint); text-transform:uppercase; margin-bottom:3px; font-weight:600;}
+  .clock-value{font-family:'Anton',sans-serif; font-size:23px; color:var(--amber-bright); line-height:1.1; text-shadow:0 0 18px rgba(231,169,60,0.3);}
+  .clock-value.team{color:var(--chalk); font-family:'Anton',sans-serif; font-size:20px;}
+  .clock-value.small{font-size:13px; font-family:'Space Mono',monospace; color:var(--chalk-dim); font-weight:700; line-height:1.7;}
+  .admin-zone{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .pill{
+    font-size:11.5px; font-weight:600; padding:7px 13px; border-radius:999px; border:1px solid var(--line);
+    background:var(--panel); color:var(--chalk-dim); cursor:pointer; letter-spacing:0.02em;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .pill:hover{border-color:var(--amber-dim); color:var(--chalk);}
+  .pill.active{background:var(--amber); color:var(--ink); border-color:var(--amber); font-weight:700;}
+  .pill-solid{background:var(--amber); color:var(--ink); border-color:var(--amber); font-weight:700;}
+  .pill-solid:hover{background:var(--amber-bright); border-color:var(--amber-bright); color:var(--ink);}
+
+  .tabbar{
+    max-width:1360px; margin:0 auto; padding:0 0;
+    display:flex; gap:4px; flex-wrap:wrap;
+  }
+  .tab{
+    font-family:'Anton',sans-serif; font-size:13px; letter-spacing:0.05em;
+    padding:10px 18px; border-radius:9px 9px 0 0; cursor:pointer;
+    background:transparent; color:var(--chalk-faint); border:1px solid transparent; border-bottom:none;
+    text-transform:uppercase; position:relative; top:1px;
+  }
+  .tab:hover{color:var(--chalk-dim);}
+  .tab.active{background:var(--panel-2); color:var(--amber-bright); border-color:var(--line); box-shadow:0 -2px 0 var(--amber) inset;}
+  .tab-badge{
+    display:none; margin-left:6px; background:var(--amber); color:var(--ink); border-radius:999px;
+    padding:1px 7px; font-size:10px; font-family:'Space Mono',monospace; font-weight:700;
+  }
+
+  /* ---------- Layout shell ---------- */
+  .wrap{max-width:1360px; margin:0 auto; padding:0 22px 64px;}
+  .panel{background:var(--panel-2); border:1px solid var(--line); border-top:none; border-radius:0 0 var(--radius-lg) var(--radius-lg); padding:22px;}
+  .layout{display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start;}
+  @media (max-width:900px){ .layout{grid-template-columns:1fr;} }
+
+  .section-title{
+    font-family:'Anton',sans-serif; font-size:13px; letter-spacing:0.08em; color:var(--chalk-dim);
+    text-transform:uppercase; margin:0 0 12px; display:flex; align-items:center; gap:9px;
+  }
+  .section-title::before{content:''; width:20px; height:2px; background:var(--amber); display:inline-block; flex-shrink:0;}
+
+  /* ---------- Board filters / legend ---------- */
+  .filters{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;}
+  .legend{display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--line-soft);}
+  .legend-item{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--chalk-faint); font-weight:600; letter-spacing:0.02em;}
+  .legend-dot{width:9px; height:9px; border-radius:3px; flex-shrink:0;}
+  .legend-dot.QB{background:var(--qb);} .legend-dot.RB{background:var(--rb);} .legend-dot.WR{background:var(--wr);}
+  .legend-dot.TE{background:var(--te);} .legend-dot.K{background:var(--k);} .legend-dot.DST{background:var(--dst);}
+
+  .custom-pick-bar{
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    background:var(--panel-3); border:1px dashed var(--amber-dim); border-radius:var(--radius);
+    padding:11px 14px; margin-bottom:14px;
+  }
+  .custom-pick-bar .cp-label{font-size:11px; color:var(--amber-bright); text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap; font-weight:700;}
+  .custom-pick-bar input, .custom-pick-bar select{margin:0;}
+
+  .pos-btn{
+    border:1px solid var(--line); background:var(--panel); color:var(--chalk-dim);
+    font-family:'Space Mono',monospace; font-weight:700; font-size:12px;
+    padding:7px 14px; border-radius:7px; cursor:pointer; transition:border-color .15s ease;
+  }
+  .pos-btn:hover{border-color:var(--chalk-faint);}
+  .pos-btn[data-pos="QB"].active{background:var(--qb); border-color:var(--qb); color:#1D0906;}
+  .pos-btn[data-pos="RB"].active{background:var(--rb); border-color:var(--rb); color:#052414;}
+  .pos-btn[data-pos="WR"].active{background:var(--wr); border-color:var(--wr); color:#04142E;}
+  .pos-btn[data-pos="TE"].active{background:var(--te); border-color:var(--te); color:#210F35;}
+  .pos-btn[data-pos="K"].active{background:var(--k); border-color:var(--k); color:#10130F;}
+  .pos-btn[data-pos="DST"].active{background:var(--dst); border-color:var(--dst); color:#1E1103;}
+  .pos-btn[data-pos="ALL"].active{background:var(--amber); border-color:var(--amber); color:var(--ink);}
+
+  .search-input{
+    flex:1; min-width:180px;
+    background:var(--panel); border:1px solid var(--line); color:var(--chalk);
+    padding:8px 13px; border-radius:7px; font-family:'Barlow',sans-serif; font-size:13.5px;
+  }
+  .search-input::placeholder{color:var(--chalk-faint);}
+  select{
+    background:var(--panel); border:1px solid var(--line); color:var(--chalk);
+    padding:8px 11px; border-radius:7px; font-family:'Barlow',sans-serif; font-size:13px; font-weight:500;
+  }
+
+  /* ---------- Player pool table ---------- */
+  .ptable-wrap{overflow:auto; max-height:66vh; border:1px solid var(--line-soft); border-radius:var(--radius); background:var(--panel);}
+  .ptable{width:100%; border-collapse:collapse;}
+  .ptable thead th{
+    position:sticky; top:0; z-index:2; background:var(--panel-3);
+    text-align:left; font-size:10px; letter-spacing:0.09em; text-transform:uppercase; font-weight:700;
+    color:var(--chalk-dim); padding:10px 12px; border-bottom:1px solid var(--line);
+  }
+  .ptable tbody tr{border-bottom:1px solid var(--line-soft);}
+  .ptable tbody tr:last-child{border-bottom:none;}
+  .ptable tbody tr:hover{background:rgba(231,169,60,0.05);}
+  .ptable td{padding:9px 12px; vertical-align:middle; font-size:13.5px;}
+  .ptable tr.drafted{opacity:0.35;}
+  .ptable tr.drafted .pname{text-decoration:line-through;}
+  .pos-chip{
+    display:inline-block; font-family:'Space Mono',monospace; font-weight:700; font-size:10px;
+    padding:2px 8px; border-radius:5px; color:#0c1410; letter-spacing:0.02em;
+  }
+  .pos-chip.QB{background:var(--qb); color:#1D0906;} .pos-chip.RB{background:var(--rb); color:#052414;}
+  .pos-chip.WR{background:var(--wr); color:#EAF1FF;} .pos-chip.TE{background:var(--te); color:#210F35;}
+  .pos-chip.K{background:var(--k); color:#10130F;} .pos-chip.DST{background:var(--dst); color:#1E1103;}
+  .pos-chip.OTHER{background:var(--panel-3); color:var(--chalk-dim); border:1px solid var(--line);}
+  .tier-chip{
+    display:inline-block; font-family:'Space Mono',monospace; font-size:10px; color:var(--chalk-dim);
+    border:1px solid var(--line); padding:1px 6px; border-radius:4px;
+  }
+  .pname{font-weight:600; color:var(--chalk);}
+  .pnotes{font-size:11px; color:var(--chalk-dim); display:block; max-width:340px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .draft-btn{
+    font-family:'Space Mono',monospace; font-weight:700; font-size:11px; letter-spacing:0.01em;
+    background:var(--amber); color:var(--ink); border:none; padding:7px 12px; border-radius:6px; cursor:pointer;
+    white-space:nowrap;
+  }
+  .draft-btn:hover{background:var(--amber-bright);}
+  .draft-btn:disabled{background:var(--panel-3); color:var(--chalk-faint); cursor:not-allowed;}
+  .owned-tag{font-size:10.5px; color:var(--chalk-faint); font-family:'Space Mono',monospace;}
+
+  /* ---------- Draft order / up next ---------- */
+  .order-list{max-height:78vh; overflow-y:auto; padding-right:4px;}
+  .order-list-side{max-height:calc(100vh - 220px); position:sticky; top:172px;}
+  .order-row{
+    display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; margin-bottom:3px;
+    border:1px solid transparent; font-size:12px;
+  }
+  .order-row.current{background:rgba(231,169,60,0.14); border-color:var(--amber-dim);}
+  .order-row.done{opacity:0.42;}
+  .order-num{font-family:'Space Mono',monospace; color:var(--chalk-faint); width:56px; flex-shrink:0; font-size:11px;}
+  .order-team{font-weight:700; flex:1; color:var(--chalk); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .order-player{font-size:11px; color:var(--chalk-dim); flex-shrink:0; text-align:right; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .order-traded{font-size:9px; color:var(--amber-bright); margin-left:5px; font-family:'Space Mono',monospace; font-weight:700;}
+
+  /* ---------- Buttons / general ---------- */
+  .btn{
+    font-family:'Barlow',sans-serif; font-weight:600; font-size:13.5px;
+    padding:9px 17px; border-radius:8px; border:1px solid var(--line); background:var(--panel);
+    color:var(--chalk); cursor:pointer; transition:border-color .15s ease, background .15s ease;
+  }
+  .btn:hover{border-color:var(--chalk-faint);}
+  .btn.primary{background:var(--amber); color:var(--ink); border-color:var(--amber); font-weight:700;}
+  .btn.primary:hover{background:var(--amber-bright);}
+  .btn.danger{background:transparent; border-color:var(--danger); color:var(--danger);}
+  .btn.danger:hover{background:rgba(226,98,75,0.1);}
+  .btn:disabled{opacity:0.4; cursor:not-allowed;}
+  .btn-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+
+  /* ---------- Trades ---------- */
+  .trade-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:10px;
+  }
+  .trade-title{font-family:'Space Mono',monospace; font-size:12.5px; font-weight:700; color:var(--amber-bright); margin-bottom:7px; display:flex; align-items:center;}
+  .trade-flow{font-size:12.5px; color:var(--chalk-dim); line-height:1.65;}
+  .trade-note{font-size:11.5px; color:var(--chalk-faint); font-style:italic; margin-top:5px;}
+  .pick-checks{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+  .pick-check{
+    font-family:'Space Mono',monospace; font-size:11px; font-weight:700; border:1px solid var(--line); border-radius:5px;
+    padding:5px 9px; cursor:pointer; color:var(--chalk-dim); background:var(--panel-3);
+    transition:border-color .15s ease;
+  }
+  .pick-check:hover{border-color:var(--amber-dim);}
+  .pick-check.sel{background:var(--amber); color:var(--ink); border-color:var(--amber);}
+  .form-row{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;}
+  label{font-size:10.5px; color:var(--chalk-faint); text-transform:uppercase; letter-spacing:0.07em; font-weight:700; display:block; margin-bottom:5px;}
+
+  /* ---------- Rosters ---------- */
+  .roster-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px;}
+  .roster-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px;}
+  .roster-card h3{font-family:'Anton',sans-serif; font-size:15px; margin:0 0 9px; color:var(--chalk); display:flex; align-items:baseline; letter-spacing:0.01em;}
+  .roster-card .rcount{font-size:10px; color:var(--chalk-faint); font-family:'Space Mono',monospace; margin-left:7px; font-weight:400;}
+  .roster-row{display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12.5px; padding:5px 0; border-bottom:1px solid var(--line-soft);}
+  .roster-row:last-child{border-bottom:none;}
+  .roster-row .nm{color:var(--chalk);}
+  .roster-row .pk{color:var(--chalk-faint); font-family:'Space Mono',monospace; font-size:10px; flex-shrink:0;}
+
+  .empty-hint{color:var(--chalk-faint); font-size:12.5px; padding:16px; text-align:center;}
+
+  .toast{
+    position:fixed; bottom:20px; right:20px; background:var(--panel-3); border:1px solid var(--amber-dim);
+    color:var(--chalk); padding:11px 17px; border-radius:9px; font-size:13px; z-index:200;
+    box-shadow:0 12px 30px rgba(0,0,0,0.5); max-width:320px;
+  }
+  ::-webkit-scrollbar{width:9px; height:9px;}
+  ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--chalk-faint);}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  .footer-note{color:var(--chalk-faint); font-size:11px; text-align:center; padding:22px 0 0; line-height:1.6;}
+
+  /* ---------- Modal ---------- */
+  .modal-bg{position:fixed; inset:0; background:rgba(4,10,6,0.78); display:none; align-items:center; justify-content:center; z-index:500; padding:16px; backdrop-filter:blur(2px);}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:340px; box-shadow:0 24px 60px rgba(0,0,0,0.55);}
+  .modal h3{font-family:'Anton',sans-serif; margin:0 0 9px; font-size:18px; letter-spacing:0.02em; color:var(--chalk);}
+  .modal p{font-size:12.5px; color:var(--chalk-dim); margin:0 0 14px; line-height:1.55;}
+  .modal input, .modal-select{width:100%; padding:11px 13px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--chalk); margin-bottom:15px; font-family:'Space Mono',monospace; font-size:14px;}
+  .modal-select{font-family:'Barlow',sans-serif; font-size:14px; font-weight:500;}
+  .modal-actions{display:flex; gap:8px; justify-content:flex-end; align-items:center;}
+</style>
+</head>
+<body>
+<div id="loadingOverlay" style="position:fixed; inset:0; z-index:900; background:var(--bg); color:var(--chalk-dim); display:flex; align-items:center; justify-content:center; font-family:'Barlow',sans-serif; font-size:14px; letter-spacing:0.02em;">Loading draft board…</div>
+<div class="scoreboard">
+  <div class="scoreboard-inner">
+    <div class="brand">
+      <div class="brand-mark">AΕΠ</div>
+      <div class="brand-text">
+        <h1>AEPi Fantasy Draft</h1>
+        <span id="seasonTag">2026 Season · 12 Teams · 16 Rounds</span>
+      </div>
+    </div>
+    <div class="clock">
+      <div class="clock-seg">
+        <div class="clock-label">On the Clock</div>
+        <div class="clock-value team" id="clockTeam">—</div>
+      </div>
+      <div class="clock-seg">
+        <div class="clock-label">Pick</div>
+        <div class="clock-value" id="clockPick">—</div>
+      </div>
+      <div class="clock-seg">
+        <div class="clock-label">Round</div>
+        <div class="clock-value small" id="clockRound">—</div>
+      </div>
+    </div>
+    <div class="admin-zone">
+      <button class="pill pill-solid" id="advanceBtn" data-action="advance-pick" style="display:none;">Next Pick →</button>
+      <span class="pill" id="myTeamPill" data-action="claim-team">🏷 Set your team</span>
+      <span class="pill" data-action="refresh-now" title="Updates arrive automatically — this is just a manual page reload, rarely needed">⟳ Reload</span>
+      <span class="pill" id="adminPill" data-action="toggle-admin">🔒 Admin</span>
+      <span class="pill" id="pinPill" data-action="change-pin" style="display:none;">Set PIN</span>
+      <span class="pill" data-action="export">⬇ Export</span>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tab active" data-tab="board" data-action="tab">Board</div>
+    <div class="tab" data-tab="order" data-action="tab">Draft Order</div>
+    <div class="tab" data-tab="trades" data-action="tab">Trade Center<span id="pendingBadge" class="tab-badge"></span></div>
+    <div class="tab" data-tab="rosters" data-action="tab">Rosters</div>
+  </div>
+</div>
+<div class="wrap">
+  <div class="panel" id="tab-board">
+    <div class="layout">
+      <div>
+        <div class="section-title">Player Pool</div>
+        <div class="filters">
+          <button class="pos-btn active" data-pos="ALL" data-action="setpos">ALL</button>
+          <button class="pos-btn" data-pos="QB" data-action="setpos">QB</button>
+          <button class="pos-btn" data-pos="RB" data-action="setpos">RB</button>
+          <button class="pos-btn" data-pos="WR" data-action="setpos">WR</button>
+          <button class="pos-btn" data-pos="TE" data-action="setpos">TE</button>
+          <button class="pos-btn" data-pos="K" data-action="setpos">K</button>
+          <button class="pos-btn" data-pos="DST" data-action="setpos">DST</button>
+          <input class="search-input" id="searchBox" placeholder="Search players or NFL team…">
+          <select id="hideDrafted">
+            <option value="hide">Hide drafted</option>
+            <option value="show">Show drafted</option>
+          </select>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot QB"></span>QB</span>
+          <span class="legend-item"><span class="legend-dot RB"></span>RB</span>
+          <span class="legend-item"><span class="legend-dot WR"></span>WR</span>
+          <span class="legend-item"><span class="legend-dot TE"></span>TE</span>
+          <span class="legend-item"><span class="legend-dot K"></span>K</span>
+          <span class="legend-item"><span class="legend-dot DST"></span>DST</span>
+        </div>
+        <div id="customPickBar" style="display:none;"></div>
+        <div class="ptable-wrap">
+        <table class="ptable">
+          <thead><tr>
+            <th>Player</th><th>Pos</th><th>NFL Team</th><th></th>
+          </tr></thead>
+          <tbody id="boardBody"></tbody>
+        </table>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Up Next</div>
+        <div class="order-list order-list-side" id="miniOrder"></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel" id="tab-order" style="display:none;">
+    <div class="section-title">Full Draft Order (post-trade, snake, 15 rounds)</div>
+    <div class="btn-row">
+      <button class="btn danger" data-action="undo">Undo Last Pick</button>
+      <button class="btn danger" data-action="reset">Reset Entire Draft</button>
+    </div>
+    <div class="order-list" id="fullOrder" style="max-height:75vh;"></div>
+  </div>
+  <div class="panel" id="tab-trades" style="display:none;">
+    <div class="section-title">Original Trade Log (from tracker)</div>
+    <div id="origTrades"></div>
+    <div class="section-title" style="margin-top:22px;">Propose / Record a Live Trade</div>
+    <div id="liveTradeForm"></div>
+    <div class="section-title" style="margin-top:18px;">Pending Approval</div>
+    <div id="pendingTrades"></div>
+    <div class="section-title" style="margin-top:18px;">Trade History (this draft)</div>
+    <div id="liveTrades"></div>
+  </div>
+  <div class="panel" id="tab-rosters" style="display:none;">
+    <div class="section-title">Team Rosters</div>
+    <div class="roster-grid" id="rosterGrid"></div>
+  </div>
+  <div class="footer-note">Snapshot data sourced from your 2026 draft board (late June 2026) · Draft order reconstructed from your AEPi pick-list tracker · Admin: tap the lock icon, default PIN is set on first use.</div>
+</div>
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Title</h3>
+    <p id="modalMsg"></p>
+    <input id="modalInput" type="text" style="display:none;" placeholder="">
+    <select id="modalSelect" class="modal-select" style="display:none;"></select>
+    <div class="modal-actions">
+      <span id="modalSkip" data-action="modal-skip" style="display:none; margin-right:auto; align-self:center; font-size:12px; color:var(--chalk-dim); cursor:pointer; text-decoration:underline;">Skip for now</span>
+      <button class="btn" data-action="modal-cancel">Cancel</button>
+      <button class="btn primary" id="modalConfirmBtn" data-action="modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+<script>
+/* ================= FIREBASE CONFIG =================
+   Paste the config object from your Firebase project's web app settings
+   here (Project settings -> General -> Your apps -> SDK setup and
+   configuration -> Config). These values are NOT secret -- they're safe
+   to ship in client-side code; Firestore security rules (set in the
+   Firebase console) are what actually control who can read/write. */
+const firebaseConfig = {
+  apiKey: "AIzaSyBKORKLcuv5DR5FKbdXT5yBny7J5NssOAc",
+  authDomain: "aepi-draft.firebaseapp.com",
+  projectId: "aepi-draft",
+  storageBucket: "aepi-draft.firebasestorage.app",
+  messagingSenderId: "314345864376",
+  appId: "1:314345864376:web:ea85ae447a2d67b428c84d"
+};
+
+const PLAYERS = [{"id":28,"name":"Jacoby Brissett","pos":"QB","nflTeam":"Arizona Cardinals","tier":6,"bye":"","notes":"Projected Starter"},{"id":373,"name":"Gardner Minshew II","pos":"QB","nflTeam":"Arizona Cardinals","tier":6,"bye":"","notes":"cool moustache"},{"id":36,"name":"Carson Beck","pos":"QB","nflTeam":"Arizona Cardinals","tier":6,"bye":"","notes":"(R) drafted; developmental"},{"id":21,"name":"Michael Penix Jr.","pos":"QB","nflTeam":"Atlanta Falcons","tier":5,"bye":"","notes":"QB comp- injury concerns"},{"id":53,"name":"Tua Tagovailoa","pos":"QB","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":"QB comp"},{"id":1,"name":"Lamar Jackson","pos":"QB","nflTeam":"Baltimore Ravens","tier":1,"bye":"","notes":"Top-1 fantasy QB"},{"id":374,"name":"Tyler Huntley","pos":"QB","nflTeam":"Baltimore Ravens","tier":6,"bye":"","notes":""},{"id":2,"name":"Josh Allen","pos":"QB","nflTeam":"Buffalo Bills","tier":1,"bye":"","notes":"Top-2 fantasy QB"},{"id":31,"name":"Kyle Allen","pos":"QB","nflTeam":"Buffalo Bills","tier":6,"bye":"","notes":""},{"id":33,"name":"Bryce Young","pos":"QB","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":"Improving, Starter"},{"id":375,"name":"Kenny Pickett","pos":"QB","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":""},{"id":14,"name":"Caleb Williams","pos":"QB","nflTeam":"Chicago Bears","tier":4,"bye":"","notes":"Turnover concerns"},{"id":376,"name":"Miller Moss","pos":"QB","nflTeam":"Chicago Bears","tier":6,"bye":"","notes":""},{"id":34,"name":"Tyson Bagent","pos":"QB","nflTeam":"Chicago Bears","tier":6,"bye":"","notes":"Backup (trade interest)"},{"id":3,"name":"Joe Burrow","pos":"QB","nflTeam":"Cincinnati Bengals","tier":1,"bye":"","notes":"Elite when healthy"},{"id":377,"name":"Joe Flacco","pos":"QB","nflTeam":"Cincinnati Bengals","tier":6,"bye":"","notes":"Capable backup"},{"id":37,"name":"Deshaun Watson","pos":"QB","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":"Rapist"},{"id":378,"name":"Taylen Green","pos":"QB","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":""},{"id":379,"name":"Dillon Gabriel","pos":"QB","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":"Dogshit"},{"id":38,"name":"Shedeur Sanders","pos":"QB","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":"Projected starter; Dogshit"},{"id":6,"name":"Dak Prescott","pos":"QB","nflTeam":"Dallas Cowboys","tier":3,"bye":"","notes":""},{"id":39,"name":"Joe Milton III","pos":"QB","nflTeam":"Dallas Cowboys","tier":6,"bye":"","notes":""},{"id":15,"name":"Bo Nix","pos":"QB","nflTeam":"Denver Broncos","tier":4,"bye":"","notes":"Solid QB with rushing"},{"id":40,"name":"Jarrett Stidham","pos":"QB","nflTeam":"Denver Broncos","tier":6,"bye":"","notes":""},{"id":7,"name":"Jared Goff","pos":"QB","nflTeam":"Detroit Lions","tier":3,"bye":"","notes":"High-end QB2"},{"id":41,"name":"Teddy Bridgewater","pos":"QB","nflTeam":"Detroit Lions","tier":6,"bye":"","notes":""},{"id":8,"name":"Jordan Love","pos":"QB","nflTeam":"Green Bay Packers","tier":3,"bye":"","notes":"Turnover concerns"},{"id":58,"name":"Tyrod Taylor","pos":"QB","nflTeam":"Green Bay Packers","tier":6,"bye":"","notes":""},{"id":16,"name":"C.J. Stroud","pos":"QB","nflTeam":"Houston Texans","tier":4,"bye":"","notes":"Bounce-back QB2"},{"id":43,"name":"Davis Mills","pos":"QB","nflTeam":"Houston Texans","tier":6,"bye":"","notes":""},{"id":380,"name":"Anthony Richardson Jr.","pos":"QB","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":"Trade candidate"},{"id":17,"name":"Daniel Jones","pos":"QB","nflTeam":"Indianapolis Colts","tier":4,"bye":"","notes":"2025 breakout; INJ — verify health"},{"id":44,"name":"Riley Leonard","pos":"QB","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":"Could start"},{"id":18,"name":"Trevor Lawrence","pos":"QB","nflTeam":"Jacksonville Jaguars","tier":4,"bye":"","notes":"QB2 with upside"},{"id":45,"name":"Nick Mullens","pos":"QB","nflTeam":"Jacksonville Jaguars","tier":6,"bye":"","notes":""},{"id":4,"name":"Patrick Mahomes","pos":"QB","nflTeam":"Kansas City Chiefs","tier":2,"bye":"","notes":"INJ — Week 1 health watch"},{"id":381,"name":"Garrett Nussmeier","pos":"QB","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":""},{"id":46,"name":"Justin Fields","pos":"QB","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":"-> trade from NYJ; backup w/ rushing upside"},{"id":47,"name":"Aidan O'Connell","pos":"QB","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":""},{"id":48,"name":"Fernando Mendoza","pos":"QB","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":"(R) 1st-rd; may start later"},{"id":49,"name":"Kirk Cousins","pos":"QB","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":"-> bridge starter; competition w/ rookie"},{"id":9,"name":"Justin Herbert","pos":"QB","nflTeam":"Los Angeles Chargers","tier":3,"bye":"","notes":"High-end QB2"},{"id":382,"name":"DJ Uiagalelei","pos":"QB","nflTeam":"Los Angeles Chargers","tier":6,"bye":"","notes":""},{"id":50,"name":"Trey Lance","pos":"QB","nflTeam":"Los Angeles Chargers","tier":6,"bye":"","notes":""},{"id":10,"name":"Matthew Stafford","pos":"QB","nflTeam":"Los Angeles Rams","tier":3,"bye":"","notes":"MVP-caliber 2025"},{"id":51,"name":"Ty Simpson","pos":"QB","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":"(R) 1st-rd; sits behind Stafford"},{"id":383,"name":"Quinn Ewers","pos":"QB","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":52,"name":"Malik Willis","pos":"QB","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":"-> signed; projected starter; new staff"},{"id":22,"name":"J.J. McCarthy","pos":"QB","nflTeam":"Minnesota Vikings","tier":5,"bye":"","notes":"Competing for job"},{"id":384,"name":"Carson Wentz","pos":"QB","nflTeam":"Minnesota Vikings","tier":6,"bye":"","notes":""},{"id":23,"name":"Kyler Murray","pos":"QB","nflTeam":"Minnesota Vikings","tier":5,"bye":"","notes":"-> signed; may win job outright"},{"id":11,"name":"Drake Maye","pos":"QB","nflTeam":"New England Patriots","tier":3,"bye":"","notes":"2025 MVP runner-up; ascending"},{"id":54,"name":"Tommy DeVito","pos":"QB","nflTeam":"New England Patriots","tier":6,"bye":"","notes":""},{"id":385,"name":"Zach Wilson","pos":"QB","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":55,"name":"Spencer Rattler","pos":"QB","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":56,"name":"Tyler Shough","pos":"QB","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":"2nd yr; streamer"},{"id":24,"name":"Jaxson Dart","pos":"QB","nflTeam":"New York Giants","tier":5,"bye":"","notes":"2nd yr; rushing upside"},{"id":57,"name":"Jameis Winston","pos":"QB","nflTeam":"New York Giants","tier":6,"bye":"","notes":"Wildcard"},{"id":25,"name":"Geno Smith","pos":"QB","nflTeam":"New York Jets","tier":5,"bye":"","notes":"Dogass"},{"id":386,"name":"Brady Cook","pos":"QB","nflTeam":"New York Jets","tier":6,"bye":"","notes":""},{"id":387,"name":"Cade Klubnik","pos":"QB","nflTeam":"New York Jets","tier":6,"bye":"","notes":""},{"id":32,"name":"Andy Dalton","pos":"QB","nflTeam":"Philadelphia Eagles","tier":6,"bye":"","notes":""},{"id":12,"name":"Jalen Hurts","pos":"QB","nflTeam":"Philadelphia Eagles","tier":3,"bye":"","notes":"High-end QB2 w/ rushing TDs"},{"id":59,"name":"Tanner McKee","pos":"QB","nflTeam":"Philadelphia Eagles","tier":6,"bye":"","notes":""},{"id":26,"name":"Aaron Rodgers","pos":"QB","nflTeam":"Pittsburgh Steelers","tier":5,"bye":"","notes":"Old as"},{"id":60,"name":"Drew Allar","pos":"QB","nflTeam":"Pittsburgh Steelers","tier":6,"bye":"","notes":""},{"id":61,"name":"Mason Rudolph","pos":"QB","nflTeam":"Pittsburgh Steelers","tier":6,"bye":"","notes":""},{"id":19,"name":"Brock Purdy","pos":"QB","nflTeam":"San Francisco 49ers","tier":4,"bye":"","notes":"QB2 w/ upside"},{"id":62,"name":"Mac Jones","pos":"QB","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":"Capable backup"},{"id":388,"name":"Jalen Milroe","pos":"QB","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":""},{"id":20,"name":"Sam Darnold","pos":"QB","nflTeam":"Seattle Seahawks","tier":4,"bye":"","notes":"SB LX champ; solid QB2"},{"id":63,"name":"Drew Lock","pos":"QB","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":""},{"id":13,"name":"Baker Mayfield","pos":"QB","nflTeam":"Tampa Bay Buccaneers","tier":3,"bye":"","notes":"High-end QB2"},{"id":35,"name":"Jake Browning","pos":"QB","nflTeam":"Tampa Bay Buccaneers","tier":6,"bye":"","notes":""},{"id":27,"name":"Cam Ward","pos":"QB","nflTeam":"Tennessee Titans","tier":5,"bye":"","notes":"2nd yr; new staff (HC Robert Saleh)"},{"id":389,"name":"Will Levis","pos":"QB","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":""},{"id":65,"name":"Mitchell Trubisky","pos":"QB","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":""},{"id":5,"name":"Jayden Daniels","pos":"QB","nflTeam":"Washington Commanders","tier":2,"bye":"","notes":"Elite dual-threat QB"},{"id":66,"name":"Marcus Mariota","pos":"QB","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":"Possible Handcuff"},{"id":77,"name":"Jeremiyah Love","pos":"RB","nflTeam":"Arizona Cardinals","tier":3,"bye":"","notes":"(R) No. 3 overall; RB1 upside, pass-catching back"},{"id":100,"name":"Trey Benson","pos":"RB","nflTeam":"Arizona Cardinals","tier":5,"bye":"","notes":""},{"id":390,"name":"James Conner","pos":"RB","nflTeam":"Arizona Cardinals","tier":5,"bye":"","notes":"Injury concerns"},{"id":101,"name":"Tyler Allgeier","pos":"RB","nflTeam":"Arizona Cardinals","tier":5,"bye":"","notes":"-> signed from ATL; early-down/goal-line vulture"},{"id":391,"name":"Tyler Goodson","pos":"RB","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":""},{"id":67,"name":"Bijan Robinson","pos":"RB","nflTeam":"Atlanta Falcons","tier":1,"bye":"","notes":"Potential No. 1 overall pick"},{"id":153,"name":"Brian Robinson Jr.","pos":"RB","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":"committee back"},{"id":68,"name":"Derrick Henry","pos":"RB","nflTeam":"Baltimore Ravens","tier":1,"bye":"","notes":"Elite workhorse; age watch"},{"id":102,"name":"Justice Hill","pos":"RB","nflTeam":"Baltimore Ravens","tier":5,"bye":"","notes":"Passing-down back; Dogshit"},{"id":75,"name":"James Cook","pos":"RB","nflTeam":"Buffalo Bills","tier":2,"bye":"","notes":"Lead back; TD-dependent value"},{"id":103,"name":"Ray Davis","pos":"RB","nflTeam":"Buffalo Bills","tier":5,"bye":"","notes":"Handcuff"},{"id":392,"name":"Frank Gore Jr","pos":"RB","nflTeam":"Buffalo Bills","tier":6,"bye":"","notes":""},{"id":126,"name":"Ty Johnson","pos":"RB","nflTeam":"Buffalo Bills","tier":6,"bye":"","notes":""},{"id":393,"name":"Jonathon Brooks","pos":"RB","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":"Could be Himmothy"},{"id":84,"name":"Chuba Hubbard","pos":"RB","nflTeam":"Carolina Panthers","tier":4,"bye":"","notes":"Lead back (for now)"},{"id":127,"name":"Trevor Etienne","pos":"RB","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":""},{"id":85,"name":"D'Andre Swift","pos":"RB","nflTeam":"Chicago Bears","tier":4,"bye":"","notes":"Lead back; receiving role"},{"id":128,"name":"Kyle Monangai","pos":"RB","nflTeam":"Chicago Bears","tier":6,"bye":"","notes":"Smashmouth change-of-pace"},{"id":129,"name":"Roschon Johnson","pos":"RB","nflTeam":"Chicago Bears","tier":6,"bye":"","notes":""},{"id":78,"name":"Chase Brown","pos":"RB","nflTeam":"Cincinnati Bengals","tier":3,"bye":"","notes":"Lead back; receiving value"},{"id":394,"name":"Samaje Perine","pos":"RB","nflTeam":"Cincinnati Bengals","tier":6,"bye":"","notes":""},{"id":130,"name":"Tahj Brooks","pos":"RB","nflTeam":"Cincinnati Bengals","tier":6,"bye":"","notes":""},{"id":395,"name":"Raheim Sanders","pos":"RB","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":""},{"id":86,"name":"Quinshon Judkins","pos":"RB","nflTeam":"Cleveland Browns","tier":4,"bye":"","notes":"2025 pick; lead back"},{"id":105,"name":"Jerome Ford","pos":"RB","nflTeam":"Washington Commanders","tier":5,"bye":"","notes":""},{"id":131,"name":"Dylan Sampson","pos":"RB","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":""},{"id":87,"name":"Javonte Williams","pos":"RB","nflTeam":"Dallas Cowboys","tier":4,"bye":"","notes":"Lead back?"},{"id":396,"name":"Malik Davis","pos":"RB","nflTeam":"Dallas Cowboys","tier":6,"bye":"","notes":""},{"id":397,"name":"Hunter Luepke","pos":"RB","nflTeam":"Dallas Cowboys","tier":6,"bye":"","notes":""},{"id":106,"name":"Jaydon Blue","pos":"RB","nflTeam":"Dallas Cowboys","tier":5,"bye":"","notes":"Blisters boy"},{"id":88,"name":"J.K. Dobbins","pos":"RB","nflTeam":"Denver Broncos","tier":4,"bye":"","notes":"Lead back (verify health)"},{"id":107,"name":"RJ Harvey","pos":"RB","nflTeam":"Denver Broncos","tier":5,"bye":"","notes":"2025 pick; passing-down upside"},{"id":133,"name":"Jonah Coleman","pos":"RB","nflTeam":"Denver Broncos","tier":6,"bye":"","notes":""},{"id":69,"name":"Jahmyr Gibbs","pos":"RB","nflTeam":"Detroit Lions","tier":1,"bye":"","notes":"Elite — top-2 overall"},{"id":134,"name":"Sione Vaki","pos":"RB","nflTeam":"Detroit Lions","tier":6,"bye":"","notes":""},{"id":92,"name":"Isiah Pacheco","pos":"RB","nflTeam":"Detroit Lions","tier":4,"bye":"","notes":"Dmont Lite"},{"id":132,"name":"Miles Sanders","pos":"RB","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":90,"name":"Joe Mixon","pos":"RB","nflTeam":"Free Agent","tier":4,"bye":"","notes":""},{"id":137,"name":"Nick Chubb","pos":"RB","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":142,"name":"Kareem Hunt","pos":"RB","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":76,"name":"Josh Jacobs","pos":"RB","nflTeam":"Green Bay Packers","tier":2,"bye":"","notes":"Workhorse- Jail?"},{"id":398,"name":"Chris Brooks","pos":"RB","nflTeam":"Green Bay Packers","tier":6,"bye":"","notes":""},{"id":136,"name":"MarShawn Lloyd","pos":"RB","nflTeam":"Green Bay Packers","tier":6,"bye":"","notes":"Change-of-pace"},{"id":89,"name":"David Montgomery","pos":"RB","nflTeam":"Houston Texans","tier":4,"bye":"","notes":"TD/early-down back"},{"id":138,"name":"Woody Marks","pos":"RB","nflTeam":"Houston Texans","tier":6,"bye":"","notes":"2025 breakout"},{"id":70,"name":"Jonathan Taylor","pos":"RB","nflTeam":"Indianapolis Colts","tier":1,"bye":"","notes":"Elite — top-3 RB"},{"id":139,"name":"DJ Giddens","pos":"RB","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":"2025 pick; handcuff"},{"id":399,"name":"Ameer Abdullah","pos":"RB","nflTeam":"Jacksonville Jaguars","tier":6,"bye":"","notes":""},{"id":400,"name":"Chris Rodriguez Jr.","pos":"RB","nflTeam":"Jacksonville Jaguars","tier":6,"bye":"","notes":""},{"id":91,"name":"Bhayshul Tuten","pos":"RB","nflTeam":"Jacksonville Jaguars","tier":4,"bye":"","notes":"2025 pick; breakout/speed back"},{"id":140,"name":"LeQuint Allen","pos":"RB","nflTeam":"Jacksonville Jaguars","tier":6,"bye":"","notes":""},{"id":141,"name":"Brashard Smith","pos":"RB","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":""},{"id":401,"name":"Emari Demercado","pos":"RB","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":""},{"id":402,"name":"Emmett Johnson","pos":"RB","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":""},{"id":120,"name":"Kenneth Walker III","pos":"RB","nflTeam":"Kansas City Chiefs","tier":5,"bye":"","notes":"Huh"},{"id":71,"name":"Ashton Jeanty","pos":"RB","nflTeam":"Las Vegas Raiders","tier":1,"bye":"","notes":"2025 1st-rd; elite workhorse"},{"id":143,"name":"Raheem Mostert","pos":"RB","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":403,"name":"Dylan Laube","pos":"RB","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":""},{"id":404,"name":"Mike Washington Jr.","pos":"RB","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":""},{"id":125,"name":"Keaton Mitchell","pos":"RB","nflTeam":"Los Angeles Chargers","tier":6,"bye":"","notes":""},{"id":79,"name":"Omarion Hampton","pos":"RB","nflTeam":"Los Angeles Chargers","tier":3,"bye":"","notes":"2025 1st-rd; lead back"},{"id":405,"name":"Jaret Patterson","pos":"RB","nflTeam":"Los Angeles Chargers","tier":6,"bye":"","notes":""},{"id":109,"name":"Najee Harris","pos":"RB","nflTeam":"Free Agent","tier":5,"bye":"","notes":""},{"id":145,"name":"Kimani Vidal","pos":"RB","nflTeam":"Los Angeles Chargers","tier":6,"bye":"","notes":""},{"id":80,"name":"Kyren Williams","pos":"RB","nflTeam":"Los Angeles Rams","tier":3,"bye":"","notes":"Tweedledum"},{"id":110,"name":"Blake Corum","pos":"RB","nflTeam":"Los Angeles Rams","tier":5,"bye":"","notes":"Tweedledee"},{"id":146,"name":"Jarquez Hunter","pos":"RB","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":""},{"id":72,"name":"De'Von Achane","pos":"RB","nflTeam":"Miami Dolphins","tier":1,"bye":"","notes":"Elite receiving back"},{"id":111,"name":"Jaylen Wright","pos":"RB","nflTeam":"Miami Dolphins","tier":5,"bye":"","notes":""},{"id":147,"name":"Ollie Gordon II","pos":"RB","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":406,"name":"Demond Claiborne","pos":"RB","nflTeam":"Minnesota Vikings","tier":6,"bye":"","notes":""},{"id":93,"name":"Aaron Jones","pos":"RB","nflTeam":"Minnesota Vikings","tier":4,"bye":"","notes":"Lead back (verify health)"},{"id":112,"name":"Jordan Mason","pos":"RB","nflTeam":"Minnesota Vikings","tier":5,"bye":"","notes":"-> committee back"},{"id":81,"name":"TreVeyon Henderson","pos":"RB","nflTeam":"New England Patriots","tier":3,"bye":"","notes":"2025 pick; lead-back upside"},{"id":113,"name":"Rhamondre Stevenson","pos":"RB","nflTeam":"New England Patriots","tier":5,"bye":"","notes":"Committee"},{"id":407,"name":"Jam Miller","pos":"RB","nflTeam":"New England Patriots","tier":6,"bye":"","notes":""},{"id":148,"name":"Antonio Gibson","pos":"RB","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":94,"name":"Alvin Kamara","pos":"RB","nflTeam":"New Orleans Saints","tier":4,"bye":"","notes":"Trade rumors"},{"id":114,"name":"Travis Etienne Jr.","pos":"RB","nflTeam":"New Orleans Saints","tier":5,"bye":"","notes":"-> signed from JAX; committee"},{"id":408,"name":"Devin Neal","pos":"RB","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":149,"name":"Kendre Miller","pos":"RB","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":95,"name":"Cam Skattebo","pos":"RB","nflTeam":"New York Giants","tier":4,"bye":"","notes":"2025 pick; lead back; inj concerns"},{"id":115,"name":"Tyrone Tracy Jr.","pos":"RB","nflTeam":"New York Giants","tier":5,"bye":"","notes":"Committee"},{"id":150,"name":"Devin Singletary","pos":"RB","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":82,"name":"Breece Hall","pos":"RB","nflTeam":"New York Jets","tier":3,"bye":"","notes":"Lead back"},{"id":116,"name":"Braelon Allen","pos":"RB","nflTeam":"New York Jets","tier":5,"bye":"","notes":"Handcuff"},{"id":151,"name":"Isaiah Davis","pos":"RB","nflTeam":"New York Jets","tier":6,"bye":"","notes":""},{"id":108,"name":"Tank Bigsby","pos":"RB","nflTeam":"Philadelphia Eagles","tier":5,"bye":"","notes":""},{"id":73,"name":"Saquon Barkley","pos":"RB","nflTeam":"Philadelphia Eagles","tier":1,"bye":"","notes":"Elite — top-3 overall"},{"id":152,"name":"Will Shipley","pos":"RB","nflTeam":"Philadelphia Eagles","tier":6,"bye":"","notes":""},{"id":104,"name":"Rico Dowdle","pos":"RB","nflTeam":"Pittsburgh Steelers","tier":5,"bye":"","notes":""},{"id":96,"name":"Jaylen Warren","pos":"RB","nflTeam":"Pittsburgh Steelers","tier":4,"bye":"","notes":"Lead back"},{"id":409,"name":"Eli Heidenreich","pos":"RB","nflTeam":"Pittsburgh Steelers","tier":6,"bye":"","notes":""},{"id":117,"name":"Kaleb Johnson","pos":"RB","nflTeam":"Pittsburgh Steelers","tier":5,"bye":"","notes":""},{"id":156,"name":"Austin Ekeler","pos":"RB","nflTeam":"Free Agent","tier":6,"bye":"","notes":"INJ/age; passing-down"},{"id":74,"name":"Christian McCaffrey","pos":"RB","nflTeam":"San Francisco 49ers","tier":1,"bye":"","notes":"2025 top scorer; injury history watch"},{"id":118,"name":"Isaac Guerendo","pos":"RB","nflTeam":"San Francisco 49ers","tier":5,"bye":"","notes":""},{"id":410,"name":"Kyle Juszczyk","pos":"RB","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":""},{"id":411,"name":"Kaelon Black","pos":"RB","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":""},{"id":412,"name":"Jordan James","pos":"RB","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":""},{"id":135,"name":"Emanuel Wilson","pos":"RB","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":"handcuff to Charbonnet"},{"id":97,"name":"Zach Charbonnet","pos":"RB","nflTeam":"Seattle Seahawks","tier":4,"bye":"","notes":"INJ — returning from ACL; lead-back hope"},{"id":413,"name":"George Holani","pos":"RB","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":""},{"id":119,"name":"Jadarian Price","pos":"RB","nflTeam":"Seattle Seahawks","tier":5,"bye":"","notes":"(R) explosive; committee"},{"id":414,"name":"Sean Tucker","pos":"RB","nflTeam":"Tampa Bay Buccaneers","tier":6,"bye":"","notes":""},{"id":83,"name":"Bucky Irving","pos":"RB","nflTeam":"Tampa Bay Buccaneers","tier":3,"bye":"","notes":"Lead back (injury watch)"},{"id":121,"name":"Kenneth Gainwell","pos":"RB","nflTeam":"Tampa Bay Buccaneers","tier":5,"bye":"","notes":""},{"id":98,"name":"Tony Pollard","pos":"RB","nflTeam":"Tennessee Titans","tier":4,"bye":"","notes":"Lead back"},{"id":122,"name":"Tyjae Spears","pos":"RB","nflTeam":"Tennessee Titans","tier":5,"bye":"","notes":"Passing-down/committee"},{"id":155,"name":"Nick Singleton","pos":"RB","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":"(R) sleeper handcuff"},{"id":154,"name":"Rachaad White","pos":"RB","nflTeam":"Washington Commanders","tier":4,"bye":"","notes":"-> signed from TB; receiving back"},{"id":123,"name":"Jacory Croskey-Merritt","pos":"RB","nflTeam":"Washington Commanders","tier":5,"bye":"","notes":"2025 pick; early-down"},{"id":415,"name":"Kaytron Allen","pos":"RB","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":""},{"id":169,"name":"Marvin Harrison Jr.","pos":"WR","nflTeam":"Arizona Cardinals","tier":3,"bye":"","notes":"WR1 but kinda not"},{"id":220,"name":"Michael Wilson","pos":"WR","nflTeam":"Arizona Cardinals","tier":6,"bye":"","notes":"WR2 but kinda not"},{"id":416,"name":"Devin Duvernay","pos":"WR","nflTeam":"Arizona Cardinals","tier":6,"bye":"","notes":""},{"id":417,"name":"Kendrick Bourne","pos":"WR","nflTeam":"Arizona Cardinals","tier":6,"bye":"","notes":""},{"id":164,"name":"Drake London","pos":"WR","nflTeam":"Atlanta Falcons","tier":2,"bye":"","notes":"Strong WR1"},{"id":226,"name":"Olamide Zaccheaus","pos":"WR","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":""},{"id":418,"name":"Jahan Dotson","pos":"WR","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":""},{"id":419,"name":"Vinny Anthony II","pos":"WR","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":""},{"id":420,"name":"Juice Wells Jr","pos":"WR","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":""},{"id":421,"name":"Zachariah Branch","pos":"WR","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":""},{"id":170,"name":"Zay Flowers","pos":"WR","nflTeam":"Baltimore Ravens","tier":3,"bye":"","notes":"WR1- bad"},{"id":204,"name":"Rashod Bateman","pos":"WR","nflTeam":"Baltimore Ravens","tier":5,"bye":"","notes":""},{"id":422,"name":"Ja'Kobi Lane","pos":"WR","nflTeam":"Baltimore Ravens","tier":6,"bye":"","notes":"upside rookie"},{"id":423,"name":"Elijah Sarratt","pos":"WR","nflTeam":"Baltimore Ravens","tier":6,"bye":"","notes":""},{"id":172,"name":"DJ Moore","pos":"WR","nflTeam":"Buffalo Bills","tier":3,"bye":"","notes":""},{"id":188,"name":"Keon Coleman","pos":"WR","nflTeam":"Buffalo Bills","tier":4,"bye":"","notes":"Cookie boy"},{"id":189,"name":"Khalil Shakir","pos":"WR","nflTeam":"Buffalo Bills","tier":4,"bye":"","notes":""},{"id":205,"name":"Joshua Palmer","pos":"WR","nflTeam":"Buffalo Bills","tier":5,"bye":"","notes":"Canadian"},{"id":171,"name":"Tetairoa McMillan","pos":"WR","nflTeam":"Carolina Panthers","tier":3,"bye":"","notes":"2025 1st-rd; ascending WR1"},{"id":224,"name":"Jalen Coker","pos":"WR","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":"big deal"},{"id":225,"name":"Xavier Legette","pos":"WR","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":""},{"id":424,"name":"Chris Brazzell II","pos":"WR","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":"eyes emoji"},{"id":173,"name":"Rome Odunze","pos":"WR","nflTeam":"Chicago Bears","tier":3,"bye":"","notes":"Ascending WR1"},{"id":206,"name":"Luther Burden III","pos":"WR","nflTeam":"Chicago Bears","tier":5,"bye":"","notes":""},{"id":425,"name":"Scotty Miller","pos":"WR","nflTeam":"Chicago Bears","tier":6,"bye":"","notes":""},{"id":426,"name":"Kalif Raymond","pos":"WR","nflTeam":"Chicago Bears","tier":6,"bye":"","notes":""},{"id":157,"name":"Ja'Marr Chase","pos":"WR","nflTeam":"Cincinnati Bengals","tier":1,"bye":"","notes":"Elite — top-2 WR"},{"id":165,"name":"Tee Higgins","pos":"WR","nflTeam":"Cincinnati Bengals","tier":2,"bye":"","notes":"High-end WR2"},{"id":227,"name":"Andrei Iosivas","pos":"WR","nflTeam":"Cincinnati Bengals","tier":6,"bye":"","notes":""},{"id":427,"name":"Colbie Young","pos":"WR","nflTeam":"Cincinnati Bengals","tier":6,"bye":"","notes":""},{"id":428,"name":"Mitchell Tinsley","pos":"WR","nflTeam":"Cincinnati Bengals","tier":6,"bye":"","notes":""},{"id":190,"name":"Jerry Jeudy","pos":"WR","nflTeam":"Cleveland Browns","tier":4,"bye":"","notes":""},{"id":207,"name":"Cedric Tillman","pos":"WR","nflTeam":"Cleveland Browns","tier":5,"bye":"","notes":""},{"id":228,"name":"Denzel Boston","pos":"WR","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":"(R) size/red-zone rookie"},{"id":229,"name":"KC Concepcion","pos":"WR","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":"(R) 2nd-rd rookie"},{"id":429,"name":"Isaiah Bond","pos":"WR","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":""},{"id":158,"name":"CeeDee Lamb","pos":"WR","nflTeam":"Dallas Cowboys","tier":1,"bye":"","notes":"Elite WR1"},{"id":174,"name":"George Pickens","pos":"WR","nflTeam":"Dallas Cowboys","tier":3,"bye":"","notes":"-> 2025 trade; strong WR2"},{"id":430,"name":"KaVontae Turpin","pos":"WR","nflTeam":"Dallas Cowboys","tier":6,"bye":"","notes":""},{"id":431,"name":"Ryan Flournoy","pos":"WR","nflTeam":"Dallas Cowboys","tier":6,"bye":"","notes":""},{"id":432,"name":"Marquez Valdes-Scantling","pos":"WR","nflTeam":"Dallas Cowboys","tier":6,"bye":"","notes":""},{"id":180,"name":"Jaylen Waddle","pos":"WR","nflTeam":"Denver Broncos","tier":3,"bye":"","notes":"WR1/2"},{"id":191,"name":"Courtland Sutton","pos":"WR","nflTeam":"Denver Broncos","tier":4,"bye":"","notes":"WR2"},{"id":208,"name":"Marvin Mims Jr.","pos":"WR","nflTeam":"Denver Broncos","tier":5,"bye":"","notes":""},{"id":231,"name":"Troy Franklin","pos":"WR","nflTeam":"Denver Broncos","tier":6,"bye":"","notes":""},{"id":433,"name":"Lil'Jordan Humphrey","pos":"WR","nflTeam":"Denver Broncos","tier":6,"bye":"","notes":""},{"id":159,"name":"Amon-Ra St. Brown","pos":"WR","nflTeam":"Detroit Lions","tier":1,"bye":"","notes":"Elite WR1"},{"id":175,"name":"Jameson Williams","pos":"WR","nflTeam":"Detroit Lions","tier":3,"bye":"","notes":"Big-play WR2"},{"id":219,"name":"Greg Dortch","pos":"WR","nflTeam":"Detroit Lions","tier":6,"bye":"","notes":""},{"id":232,"name":"Isaac TeSlaa","pos":"WR","nflTeam":"Detroit Lions","tier":6,"bye":"","notes":""},{"id":181,"name":"Tyreek Hill","pos":"WR","nflTeam":"Free Agent","tier":3,"bye":"","notes":"INJ — returning; age/role watch"},{"id":202,"name":"Deebo Samuel Sr.","pos":"WR","nflTeam":"Free Agent","tier":4,"bye":"","notes":""},{"id":221,"name":"Ray-Ray McCloud III","pos":"WR","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":222,"name":"DeAndre Hopkins","pos":"WR","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":223,"name":"Curtis Samuel","pos":"WR","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":242,"name":"Keenan Allen","pos":"WR","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":252,"name":"Allen Lazard","pos":"WR","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":209,"name":"Jayden Reed","pos":"WR","nflTeam":"Green Bay Packers","tier":5,"bye":"","notes":"Slot/big-play"},{"id":210,"name":"Matthew Golden","pos":"WR","nflTeam":"Green Bay Packers","tier":5,"bye":"","notes":"2025 1st-rd; who knows"},{"id":233,"name":"Christian Watson","pos":"WR","nflTeam":"Green Bay Packers","tier":6,"bye":"","notes":""},{"id":434,"name":"Savion Williams","pos":"WR","nflTeam":"Green Bay Packers","tier":6,"bye":"","notes":"gadget rb"},{"id":166,"name":"Nico Collins","pos":"WR","nflTeam":"Houston Texans","tier":2,"bye":"","notes":"Elite WR1"},{"id":211,"name":"Jayden Higgins","pos":"WR","nflTeam":"Houston Texans","tier":5,"bye":"","notes":""},{"id":235,"name":"Jaylin Noel","pos":"WR","nflTeam":"Houston Texans","tier":6,"bye":"","notes":""},{"id":236,"name":"Tank Dell","pos":"WR","nflTeam":"Houston Texans","tier":6,"bye":"","notes":"INJ — major knee; status"},{"id":435,"name":"Xavier Hutchinson","pos":"WR","nflTeam":"Houston Texans","tier":6,"bye":"","notes":""},{"id":436,"name":"Justin Watson","pos":"WR","nflTeam":"Houston Texans","tier":6,"bye":"","notes":""},{"id":212,"name":"Josh Downs","pos":"WR","nflTeam":"Indianapolis Colts","tier":5,"bye":"","notes":""},{"id":238,"name":"Alec Pierce","pos":"WR","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":"Deep threat WR1"},{"id":437,"name":"Nick Westbrook-Ikhine","pos":"WR","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":""},{"id":438,"name":"Deion Burks","pos":"WR","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":""},{"id":439,"name":"Ashton Dulin","pos":"WR","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":""},{"id":167,"name":"Brian Thomas Jr.","pos":"WR","nflTeam":"Jacksonville Jaguars","tier":2,"bye":"","notes":"drops"},{"id":193,"name":"Travis Hunter","pos":"WR","nflTeam":"Jacksonville Jaguars","tier":4,"bye":"","notes":""},{"id":194,"name":"Jakobi Meyers","pos":"WR","nflTeam":"Jacksonville Jaguars","tier":4,"bye":"","notes":"Target leader "},{"id":239,"name":"Parker Washington","pos":"WR","nflTeam":"Jacksonville Jaguars","tier":6,"bye":"","notes":""},{"id":176,"name":"Rashee Rice","pos":"WR","nflTeam":"Kansas City Chiefs","tier":3,"bye":"","notes":"Talent WR1; suspension/legal watch"},{"id":440,"name":"Jalen Royals","pos":"WR","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":""},{"id":441,"name":"Cyrus Allen","pos":"WR","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":""},{"id":442,"name":"Tyquan Thornton","pos":"WR","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":""},{"id":177,"name":"Xavier Worthy","pos":"WR","nflTeam":"Kansas City Chiefs","tier":3,"bye":"","notes":"Speed; ascending"},{"id":213,"name":"Tre Tucker","pos":"WR","nflTeam":"Las Vegas Raiders","tier":5,"bye":"","notes":""},{"id":241,"name":"Dont'e Thornton Jr.","pos":"WR","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":""},{"id":443,"name":"Jack Bech","pos":"WR","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":""},{"id":246,"name":"Jalen Nailor","pos":"WR","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":""},{"id":178,"name":"Ladd McConkey","pos":"WR","nflTeam":"Los Angeles Chargers","tier":3,"bye":"","notes":"WR1; PPR machine"},{"id":214,"name":"Quentin Johnston","pos":"WR","nflTeam":"Los Angeles Chargers","tier":5,"bye":"","notes":""},{"id":444,"name":"KeAndre Lambert-Smith","pos":"WR","nflTeam":"Los Angeles Chargers","tier":6,"bye":"","notes":""},{"id":243,"name":"Tre Harris","pos":"WR","nflTeam":"Los Angeles Chargers","tier":6,"bye":"","notes":""},{"id":244,"name":"Jordan Whittington","pos":"WR","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":""},{"id":445,"name":"Konata Mumpfeild","pos":"WR","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":""},{"id":160,"name":"Puka Nacua","pos":"WR","nflTeam":"Los Angeles Rams","tier":1,"bye":"","notes":"Elite — top-3 WR"},{"id":179,"name":"Davante Adams","pos":"WR","nflTeam":"Los Angeles Rams","tier":3,"bye":"","notes":"-> signed 2025; strong WR2"},{"id":230,"name":"Jalen Tolbert","pos":"WR","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":446,"name":"Chris Bell","pos":"WR","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":447,"name":"Kevin Coleman Jr.","pos":"WR","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":448,"name":"Tutu Atwell","pos":"WR","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":245,"name":"Caleb Douglas","pos":"WR","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":161,"name":"Justin Jefferson","pos":"WR","nflTeam":"Minnesota Vikings","tier":1,"bye":"","notes":"Elite — top-3 WR"},{"id":195,"name":"Jordan Addison","pos":"WR","nflTeam":"Minnesota Vikings","tier":4,"bye":"","notes":"WR2 (suspension history)"},{"id":197,"name":"Jauan Jennings","pos":"WR","nflTeam":"Minnesota Vikings","tier":4,"bye":"","notes":""},{"id":182,"name":"A.J. Brown","pos":"WR","nflTeam":"New England Patriots","tier":3,"bye":"","notes":"-> trade from PHI; new WR1"},{"id":234,"name":"Romeo Doubs","pos":"WR","nflTeam":"New England Patriots","tier":6,"bye":"","notes":""},{"id":247,"name":"DeMario Douglas","pos":"WR","nflTeam":"New England Patriots","tier":6,"bye":"","notes":"Slot"},{"id":449,"name":"Mack Hollins","pos":"WR","nflTeam":"New England Patriots","tier":6,"bye":"","notes":""},{"id":450,"name":"Kayshon Boutte","pos":"WR","nflTeam":"New England Patriots","tier":6,"bye":"","notes":""},{"id":248,"name":"Kyle Williams","pos":"WR","nflTeam":"New England Patriots","tier":6,"bye":"","notes":""},{"id":451,"name":"Devaughn Vele","pos":"WR","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":452,"name":"Ja'Lynn Polk","pos":"WR","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":453,"name":"Mason Tipton","pos":"WR","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":183,"name":"Chris Olave","pos":"WR","nflTeam":"New Orleans Saints","tier":3,"bye":"","notes":"WR1 (concussion history)"},{"id":215,"name":"Jordyn Tyson","pos":"WR","nflTeam":"New Orleans Saints","tier":5,"bye":"","notes":"(R) No. 8 overall; WR3/flex upside"},{"id":162,"name":"Malik Nabers","pos":"WR","nflTeam":"New York Giants","tier":1,"bye":"","notes":"Elite — top-8 WR"},{"id":203,"name":"Darnell Mooney","pos":"WR","nflTeam":"New York Giants","tier":5,"bye":"","notes":""},{"id":240,"name":"JuJu Smith-Schuster","pos":"WR","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":454,"name":"Odell Beckham Jr","pos":"WR","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":455,"name":"Malachi Fields","pos":"WR","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":250,"name":"Darius Slayton","pos":"WR","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":255,"name":"Calvin Austin III","pos":"WR","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":168,"name":"Garrett Wilson","pos":"WR","nflTeam":"New York Jets","tier":2,"bye":"","notes":"Elite WR1"},{"id":456,"name":"Tim Patrick","pos":"WR","nflTeam":"New York Jets","tier":6,"bye":"","notes":""},{"id":457,"name":"Omar Cooper Jr.","pos":"WR","nflTeam":"New York Jets","tier":6,"bye":"","notes":""},{"id":237,"name":"Adonai Mitchell","pos":"WR","nflTeam":"New York Jets","tier":6,"bye":"","notes":""},{"id":184,"name":"DeVonta Smith","pos":"WR","nflTeam":"Philadelphia Eagles","tier":3,"bye":"","notes":"Now WR1 after A.J. Brown trade"},{"id":216,"name":"Makai Lemon","pos":"WR","nflTeam":"Philadelphia Eagles","tier":5,"bye":"","notes":"(R) 1st-rd; immediate role"},{"id":253,"name":"Dontayvion Wicks","pos":"WR","nflTeam":"Philadelphia Eagles","tier":6,"bye":"","notes":"-> trade"},{"id":254,"name":"Marquise Brown","pos":"WR","nflTeam":"Philadelphia Eagles","tier":6,"bye":"","notes":"-> signed; field-stretcher"},{"id":185,"name":"DK Metcalf","pos":"WR","nflTeam":"Pittsburgh Steelers","tier":3,"bye":"","notes":"-> 2025 trade; WR1"},{"id":458,"name":"Germie Bernard","pos":"WR","nflTeam":"Pittsburgh Steelers","tier":6,"bye":"","notes":""},{"id":459,"name":"Roman Wilson","pos":"WR","nflTeam":"Pittsburgh Steelers","tier":6,"bye":"","notes":""},{"id":192,"name":"Michael Pittman Jr.","pos":"WR","nflTeam":"Pittsburgh Steelers","tier":4,"bye":"","notes":"WR1"},{"id":196,"name":"Brandon Aiyuk","pos":"WR","nflTeam":"Free Agent","tier":4,"bye":"","notes":"Clinically Insane"},{"id":186,"name":"Mike Evans","pos":"WR","nflTeam":"San Francisco 49ers","tier":3,"bye":"","notes":"Reliable WR1; age watch"},{"id":460,"name":"De'Zhaun Stribling","pos":"WR","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":""},{"id":461,"name":"Demarcus Robinson","pos":"WR","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":""},{"id":462,"name":"Christian Kirk","pos":"WR","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":""},{"id":198,"name":"Ricky Pearsall","pos":"WR","nflTeam":"San Francisco 49ers","tier":4,"bye":"","notes":"Ascending WR1/2"},{"id":163,"name":"Jaxon Smith-Njigba","pos":"WR","nflTeam":"Seattle Seahawks","tier":1,"bye":"","notes":"Elite — top-5 WR"},{"id":217,"name":"Cooper Kupp","pos":"WR","nflTeam":"Seattle Seahawks","tier":5,"bye":"","notes":"-> 2025; age/role watch"},{"id":463,"name":"Jake Bobo","pos":"WR","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":""},{"id":249,"name":"Rashid Shaheed","pos":"WR","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":"Deep threat"},{"id":256,"name":"Tory Horton","pos":"WR","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":""},{"id":199,"name":"Chris Godwin","pos":"WR","nflTeam":"Tampa Bay Buccaneers","tier":4,"bye":"","notes":"INJ — returning"},{"id":200,"name":"Emeka Egbuka","pos":"WR","nflTeam":"Tampa Bay Buccaneers","tier":4,"bye":"","notes":"2025 pick; broke out"},{"id":464,"name":"Tez Johnson","pos":"WR","nflTeam":"Tampa Bay Buccaneers","tier":6,"bye":"","notes":""},{"id":465,"name":"Ted Hurst III","pos":"WR","nflTeam":"Tampa Bay Buccaneers","tier":6,"bye":"","notes":""},{"id":257,"name":"Jalen McMillan","pos":"WR","nflTeam":"Tampa Bay Buccaneers","tier":6,"bye":"","notes":""},{"id":201,"name":"Calvin Ridley","pos":"WR","nflTeam":"Tennessee Titans","tier":4,"bye":"","notes":"Veteran WR1"},{"id":218,"name":"Carnell Tate","pos":"WR","nflTeam":"Tennessee Titans","tier":5,"bye":"","notes":"(R) No. 4 overall; outside WR1 path"},{"id":251,"name":"Wan'Dale Robinson","pos":"WR","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":""},{"id":466,"name":"Chimere Dike","pos":"WR","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":""},{"id":258,"name":"Elic Ayomanor","pos":"WR","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":"Canadian"},{"id":187,"name":"Terry McLaurin","pos":"WR","nflTeam":"Washington Commanders","tier":3,"bye":"","notes":"WR1"},{"id":467,"name":"Jacoby Jones","pos":"WR","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":""},{"id":468,"name":"Treylon Burks","pos":"WR","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":""},{"id":469,"name":"Luke McCaffrey","pos":"WR","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":""},{"id":259,"name":"Antonio Williams","pos":"WR","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":"(R) slot; redraft sleeper"},{"id":260,"name":"Trey McBride","pos":"TE","nflTeam":"Arizona Cardinals","tier":1,"bye":"","notes":"Elite — top-3 TE"},{"id":470,"name":"Elijah Higgins","pos":"TE","nflTeam":"Arizona Cardinals","tier":6,"bye":"","notes":""},{"id":271,"name":"Kyle Pitts","pos":"TE","nflTeam":"Atlanta Falcons","tier":5,"bye":"","notes":"-> re-signed/extended; bounce-back hope"},{"id":471,"name":"Austin Hooper","pos":"TE","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":""},{"id":472,"name":"Durham Smythe","pos":"TE","nflTeam":"Baltimore Ravens","tier":6,"bye":"","notes":""},{"id":264,"name":"Mark Andrews","pos":"TE","nflTeam":"Baltimore Ravens","tier":4,"bye":"","notes":"Age/role watch"},{"id":265,"name":"Dalton Kincaid","pos":"TE","nflTeam":"Buffalo Bills","tier":4,"bye":"","notes":"Bounce-back candidate"},{"id":275,"name":"Dawson Knox","pos":"TE","nflTeam":"Buffalo Bills","tier":6,"bye":"","notes":""},{"id":276,"name":"Ja'Tavion Sanders","pos":"TE","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":""},{"id":277,"name":"Tommy Tremble","pos":"TE","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":""},{"id":273,"name":"Colston Loveland","pos":"TE","nflTeam":"Chicago Bears","tier":5,"bye":"","notes":"2025 1st-rd; breakout TE candidate"},{"id":278,"name":"Cole Kmet","pos":"TE","nflTeam":"Chicago Bears","tier":6,"bye":"","notes":""},{"id":473,"name":"Drew Sample","pos":"TE","nflTeam":"Cincinnati Bengals","tier":6,"bye":"","notes":""},{"id":279,"name":"Mike Gesicki","pos":"TE","nflTeam":"Cincinnati Bengals","tier":6,"bye":"","notes":""},{"id":281,"name":"Harold Fannin Jr.","pos":"TE","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":"2025 pick"},{"id":274,"name":"Jake Ferguson","pos":"TE","nflTeam":"Dallas Cowboys","tier":5,"bye":"","notes":""},{"id":308,"name":"Zach Ertz","pos":"TE","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":"DEAD"},{"id":474,"name":"Adam Trautman","pos":"TE","nflTeam":"Denver Broncos","tier":6,"bye":"","notes":""},{"id":475,"name":"Justin Joly","pos":"TE","nflTeam":"Denver Broncos","tier":6,"bye":"","notes":""},{"id":282,"name":"Evan Engram","pos":"TE","nflTeam":"Denver Broncos","tier":6,"bye":"","notes":"-> signed 2025; PPR role"},{"id":263,"name":"Sam LaPorta","pos":"TE","nflTeam":"Detroit Lions","tier":3,"bye":"","notes":"Spinal"},{"id":291,"name":"Darren Waller","pos":"TE","nflTeam":"Free Agent","tier":6,"bye":"","notes":"Status uncertain"},{"id":288,"name":"Will Dissly","pos":"TE","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":300,"name":"Jonnu Smith","pos":"TE","nflTeam":"Free Agent","tier":6,"bye":"","notes":""},{"id":267,"name":"Tucker Kraft","pos":"TE","nflTeam":"Green Bay Packers","tier":4,"bye":"","notes":"Ascending; top-3 TE upside"},{"id":283,"name":"Luke Musgrave","pos":"TE","nflTeam":"Green Bay Packers","tier":6,"bye":"","notes":""},{"id":476,"name":"Foster Moreau","pos":"TE","nflTeam":"Houston Texans","tier":6,"bye":"","notes":""},{"id":284,"name":"Dalton Schultz","pos":"TE","nflTeam":"Houston Texans","tier":6,"bye":"","notes":""},{"id":477,"name":"Mo Alie-Cox","pos":"TE","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":""},{"id":268,"name":"Tyler Warren","pos":"TE","nflTeam":"Indianapolis Colts","tier":4,"bye":"","notes":"2025 1st-rd; top-6 TE upside"},{"id":478,"name":"Tanner Koziol","pos":"TE","nflTeam":"Jacksonville Jaguars","tier":6,"bye":"","notes":""},{"id":285,"name":"Brenton Strange","pos":"TE","nflTeam":"Jacksonville Jaguars","tier":6,"bye":"","notes":"Sleeper TE"},{"id":479,"name":"Noah Gray","pos":"TE","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":""},{"id":269,"name":"Travis Kelce","pos":"TE","nflTeam":"Kansas City Chiefs","tier":4,"bye":"","notes":"Age/retirement watch "},{"id":261,"name":"Brock Bowers","pos":"TE","nflTeam":"Las Vegas Raiders","tier":1,"bye":"","notes":"Elite — TE1 overall"},{"id":286,"name":"Michael Mayer","pos":"TE","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":""},{"id":266,"name":"David Njoku","pos":"TE","nflTeam":"Los Angeles Chargers","tier":4,"bye":"","notes":"Top target in offense"},{"id":287,"name":"Oronde Gadsden II","pos":"TE","nflTeam":"Los Angeles Chargers","tier":6,"bye":"","notes":""},{"id":289,"name":"Terrance Ferguson","pos":"TE","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":"TE1 upside"},{"id":480,"name":"Max Klare","pos":"TE","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":""},{"id":481,"name":"Colby Parkinson","pos":"TE","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":""},{"id":290,"name":"Tyler Higbee","pos":"TE","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":""},{"id":482,"name":"Will Kacmarek","pos":"TE","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":483,"name":"Greg Dulcich","pos":"TE","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":270,"name":"T.J. Hockenson","pos":"TE","nflTeam":"Minnesota Vikings","tier":4,"bye":"","notes":"Top-6 TE"},{"id":292,"name":"Hunter Henry","pos":"TE","nflTeam":"New England Patriots","tier":6,"bye":"","notes":"Streamer"},{"id":280,"name":"Noah Fant","pos":"TE","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":293,"name":"Juwan Johnson","pos":"TE","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":294,"name":"Oscar Delp","pos":"TE","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":"(R) rookie"},{"id":272,"name":"Isaiah Likely","pos":"TE","nflTeam":"New York Giants","tier":5,"bye":"","notes":""},{"id":295,"name":"Theo Johnson","pos":"TE","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":296,"name":"Kenyon Sadiq","pos":"TE","nflTeam":"New York Jets","tier":6,"bye":"","notes":"(R) 1st-rd; receiving TE"},{"id":297,"name":"Mason Taylor","pos":"TE","nflTeam":"New York Jets","tier":6,"bye":"","notes":""},{"id":298,"name":"Eli Stowers","pos":"TE","nflTeam":"Philadelphia Eagles","tier":6,"bye":"","notes":"(R) future starter"},{"id":299,"name":"Grant Calcaterra","pos":"TE","nflTeam":"Philadelphia Eagles","tier":6,"bye":"","notes":""},{"id":484,"name":"Dallas Goedert","pos":"TE","nflTeam":"Philadelphia Eagles","tier":2,"bye":"","notes":""},{"id":485,"name":"Robert Tonyan","pos":"TE","nflTeam":"Pittsburgh Steelers","tier":6,"bye":"","notes":""},{"id":486,"name":"Darnell Washington","pos":"TE","nflTeam":"Pittsburgh Steelers","tier":6,"bye":"","notes":""},{"id":301,"name":"Pat Freiermuth","pos":"TE","nflTeam":"Pittsburgh Steelers","tier":6,"bye":"","notes":"Streamer"},{"id":487,"name":"Luke Farrell","pos":"TE","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":""},{"id":488,"name":"Jake Tonges","pos":"TE","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":""},{"id":262,"name":"George Kittle","pos":"TE","nflTeam":"San Francisco 49ers","tier":2,"bye":"","notes":"Elite — top-2 TE"},{"id":302,"name":"A.J. Barner","pos":"TE","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":""},{"id":303,"name":"Elijah Arroyo","pos":"TE","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":"2025 pick"},{"id":304,"name":"Cade Otton","pos":"TE","nflTeam":"Tampa Bay Buccaneers","tier":6,"bye":"","notes":"Streamer"},{"id":489,"name":"Daniel Bellinger","pos":"TE","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":""},{"id":305,"name":"Gunnar Helm","pos":"TE","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":""},{"id":306,"name":"Chig Okonkwo","pos":"TE","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":""},{"id":307,"name":"Ben Sinnott","pos":"TE","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":""},{"id":322,"name":"Chad Ryland","pos":"K","nflTeam":"Arizona Cardinals","tier":6,"bye":"","notes":""},{"id":336,"name":"Nick Folk","pos":"K","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":""},{"id":324,"name":"Tyler Loop","pos":"K","nflTeam":"Baltimore Ravens","tier":6,"bye":"","notes":"2025 pick (replaced Tucker)"},{"id":311,"name":"Tyler Bass","pos":"K","nflTeam":"Buffalo Bills","tier":5,"bye":"","notes":""},{"id":490,"name":"Ryan Fitzgerald","pos":"K","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":""},{"id":326,"name":"Cairo Santos","pos":"K","nflTeam":"Chicago Bears","tier":6,"bye":"","notes":""},{"id":312,"name":"Evan McPherson","pos":"K","nflTeam":"Cincinnati Bengals","tier":5,"bye":"","notes":""},{"id":491,"name":"Andre Szmyt","pos":"K","nflTeam":"Cleveland Browns","tier":6,"bye":"","notes":""},{"id":309,"name":"Brandon Aubrey","pos":"K","nflTeam":"Dallas Cowboys","tier":4,"bye":"","notes":"Elite — top fantasy K"},{"id":313,"name":"Wil Lutz","pos":"K","nflTeam":"Denver Broncos","tier":5,"bye":"","notes":""},{"id":314,"name":"Jake Bates","pos":"K","nflTeam":"Detroit Lions","tier":5,"bye":"","notes":""},{"id":492,"name":"Lucas Havrisik","pos":"K","nflTeam":"Green Bay Packers","tier":6,"bye":"","notes":""},{"id":493,"name":"Trey Smack","pos":"K","nflTeam":"Green Bay Packers","tier":6,"bye":"","notes":""},{"id":315,"name":"Ka'imi Fairbairn","pos":"K","nflTeam":"Houston Texans","tier":5,"bye":"","notes":""},{"id":334,"name":"Blake Grupe","pos":"K","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":""},{"id":329,"name":"Spencer Shrader","pos":"K","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":""},{"id":316,"name":"Cam Little","pos":"K","nflTeam":"Jacksonville Jaguars","tier":5,"bye":"","notes":"Strong leg"},{"id":317,"name":"Harrison Butker","pos":"K","nflTeam":"Kansas City Chiefs","tier":5,"bye":"","notes":""},{"id":494,"name":"Kansei Matsuzawa","pos":"K","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":""},{"id":340,"name":"Matt Gay","pos":"K","nflTeam":"Las Vegas Raiders","tier":5,"bye":"","notes":""},{"id":310,"name":"Cameron Dicker","pos":"K","nflTeam":"Los Angeles Chargers","tier":4,"bye":"","notes":"Elite"},{"id":495,"name":"Harrison Mevis","pos":"K","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":""},{"id":496,"name":"Zane Gonzalez","pos":"K","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":497,"name":"Riley Patterson","pos":"K","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":332,"name":"Will Reichard","pos":"K","nflTeam":"Minnesota Vikings","tier":6,"bye":"","notes":""},{"id":333,"name":"Andres Borregales","pos":"K","nflTeam":"New England Patriots","tier":6,"bye":"","notes":"2025 pick"},{"id":498,"name":"Tanner Brown","pos":"K","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":499,"name":"Charlie Smyth","pos":"K","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":500,"name":"Ben Sauls","pos":"K","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":501,"name":"Dominic Zvada","pos":"K","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":331,"name":"Jason Sanders","pos":"K","nflTeam":"New York Jets","tier":6,"bye":"","notes":""},{"id":319,"name":"Jake Elliott","pos":"K","nflTeam":"Philadelphia Eagles","tier":5,"bye":"","notes":""},{"id":502,"name":"Laith Marjan","pos":"K","nflTeam":"Pittsburgh Steelers","tier":6,"bye":"","notes":""},{"id":320,"name":"Chris Boswell","pos":"K","nflTeam":"Pittsburgh Steelers","tier":5,"bye":"","notes":""},{"id":325,"name":"Eddy Pineiro","pos":"K","nflTeam":"San Francisco 49ers","tier":6,"bye":"","notes":""},{"id":338,"name":"Jason Myers","pos":"K","nflTeam":"Seattle Seahawks","tier":6,"bye":"","notes":""},{"id":503,"name":"B.T. Potter","pos":"K","nflTeam":"Tampa Bay Buccaneers","tier":6,"bye":"","notes":""},{"id":321,"name":"Chase McLaughlin","pos":"K","nflTeam":"Tampa Bay Buccaneers","tier":5,"bye":"","notes":""},{"id":339,"name":"Joey Slye","pos":"K","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":""},{"id":337,"name":"Jake Moody","pos":"K","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":""},{"id":504,"name":"Drew Stevens","pos":"K","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":""},{"id":353,"name":"Cardinals D/ST","pos":"DST","nflTeam":"Arizona Cardinals","tier":6,"bye":"","notes":""},{"id":354,"name":"Falcons D/ST","pos":"DST","nflTeam":"Atlanta Falcons","tier":6,"bye":"","notes":""},{"id":344,"name":"Ravens D/ST","pos":"DST","nflTeam":"Baltimore Ravens","tier":5,"bye":"","notes":""},{"id":345,"name":"Bills D/ST","pos":"DST","nflTeam":"Buffalo Bills","tier":5,"bye":"","notes":""},{"id":355,"name":"Panthers D/ST","pos":"DST","nflTeam":"Carolina Panthers","tier":6,"bye":"","notes":""},{"id":346,"name":"Bears D/ST","pos":"DST","nflTeam":"Chicago Bears","tier":5,"bye":"","notes":""},{"id":356,"name":"Bengals D/ST","pos":"DST","nflTeam":"Cincinnati Bengals","tier":6,"bye":"","notes":""},{"id":341,"name":"Browns D/ST","pos":"DST","nflTeam":"Cleveland Browns","tier":4,"bye":"","notes":"Elite defense"},{"id":357,"name":"Cowboys D/ST","pos":"DST","nflTeam":"Dallas Cowboys","tier":6,"bye":"","notes":""},{"id":342,"name":"Broncos D/ST","pos":"DST","nflTeam":"Denver Broncos","tier":4,"bye":"","notes":"Elite defense"},{"id":358,"name":"Lions D/ST","pos":"DST","nflTeam":"Detroit Lions","tier":6,"bye":"","notes":""},{"id":347,"name":"Packers D/ST","pos":"DST","nflTeam":"Green Bay Packers","tier":5,"bye":"","notes":""},{"id":348,"name":"Texans D/ST","pos":"DST","nflTeam":"Houston Texans","tier":5,"bye":"","notes":"D/ST1?"},{"id":359,"name":"Colts D/ST","pos":"DST","nflTeam":"Indianapolis Colts","tier":6,"bye":"","notes":""},{"id":360,"name":"Jaguars D/ST","pos":"DST","nflTeam":"Jacksonville Jaguars","tier":6,"bye":"","notes":""},{"id":361,"name":"Chiefs D/ST","pos":"DST","nflTeam":"Kansas City Chiefs","tier":6,"bye":"","notes":""},{"id":362,"name":"Raiders D/ST","pos":"DST","nflTeam":"Las Vegas Raiders","tier":6,"bye":"","notes":""},{"id":363,"name":"Chargers D/ST","pos":"DST","nflTeam":"Los Angeles Chargers","tier":6,"bye":"","notes":""},{"id":364,"name":"Rams D/ST","pos":"DST","nflTeam":"Los Angeles Rams","tier":6,"bye":"","notes":""},{"id":365,"name":"Dolphins D/ST","pos":"DST","nflTeam":"Miami Dolphins","tier":6,"bye":"","notes":""},{"id":349,"name":"Vikings D/ST","pos":"DST","nflTeam":"Minnesota Vikings","tier":5,"bye":"","notes":""},{"id":366,"name":"Patriots D/ST","pos":"DST","nflTeam":"New England Patriots","tier":6,"bye":"","notes":""},{"id":367,"name":"Saints D/ST","pos":"DST","nflTeam":"New Orleans Saints","tier":6,"bye":"","notes":""},{"id":368,"name":"Giants D/ST","pos":"DST","nflTeam":"New York Giants","tier":6,"bye":"","notes":""},{"id":369,"name":"Jets D/ST","pos":"DST","nflTeam":"New York Jets","tier":6,"bye":"","notes":""},{"id":350,"name":"Eagles D/ST","pos":"DST","nflTeam":"Philadelphia Eagles","tier":5,"bye":"","notes":""},{"id":343,"name":"Steelers D/ST","pos":"DST","nflTeam":"Pittsburgh Steelers","tier":4,"bye":"","notes":""},{"id":351,"name":"49ers D/ST","pos":"DST","nflTeam":"San Francisco 49ers","tier":5,"bye":"","notes":""},{"id":352,"name":"Seahawks D/ST","pos":"DST","nflTeam":"Seattle Seahawks","tier":5,"bye":"","notes":""},{"id":370,"name":"Buccaneers D/ST","pos":"DST","nflTeam":"Tampa Bay Buccaneers","tier":6,"bye":"","notes":""},{"id":371,"name":"Titans D/ST","pos":"DST","nflTeam":"Tennessee Titans","tier":6,"bye":"","notes":""},{"id":372,"name":"Commanders D/ST","pos":"DST","nflTeam":"Washington Commanders","tier":6,"bye":"","notes":""}];
+const BASE_ORDER = [{"overall":1,"team":"Jake","label":"1.01","wave":1},{"overall":2,"team":"Martell","label":"1.02","wave":1},{"overall":3,"team":"Swaye","label":"1.03","wave":1},{"overall":4,"team":"Mitch","label":"1.04","wave":1},{"overall":5,"team":"Burman","label":"1.05","wave":1},{"overall":6,"team":"Gabe","label":"1.06","wave":1},{"overall":7,"team":"Ringler","label":"1.07","wave":1},{"overall":8,"team":"Martell","label":"1.08","wave":1},{"overall":9,"team":"Justin","label":"1.09","wave":1},{"overall":10,"team":"Brett","label":"1.1","wave":1},{"overall":11,"team":"Ryan","label":"1.11","wave":1},{"overall":12,"team":"Zach","label":"1.12","wave":1},{"overall":13,"team":"Zach","label":"2.13","wave":2},{"overall":14,"team":"Ryan","label":"2.14","wave":2},{"overall":15,"team":"Brett","label":"2.15","wave":2},{"overall":16,"team":"Justin","label":"2.16","wave":2},{"overall":17,"team":"Aarron","label":"2.17","wave":2},{"overall":18,"team":"Burman","label":"2.18","wave":2},{"overall":19,"team":"Gabe","label":"2.19","wave":2},{"overall":20,"team":"Aarron","label":"2.2","wave":2},{"overall":21,"team":"Mitch","label":"2.21","wave":2},{"overall":22,"team":"Swaye","label":"2.22","wave":2},{"overall":23,"team":"Ringler","label":"2.23","wave":2},{"overall":24,"team":"Jake","label":"2.24","wave":2},{"overall":25,"team":"Jake","label":"3.25","wave":3},{"overall":26,"team":"Ringler","label":"3.26","wave":3},{"overall":27,"team":"Swaye","label":"3.27","wave":3},{"overall":28,"team":"Ringler","label":"3.28","wave":3},{"overall":29,"team":"Ringler","label":"3.29","wave":3},{"overall":30,"team":"Gabe","label":"3.3","wave":3},{"overall":31,"team":"Burman","label":"3.31","wave":3},{"overall":32,"team":"Martell","label":"3.32","wave":3},{"overall":33,"team":"Justin","label":"3.33","wave":3},{"overall":34,"team":"Brett","label":"3.34","wave":3},{"overall":35,"team":"Ryan","label":"3.35","wave":3},{"overall":36,"team":"Zach","label":"3.36","wave":3},{"overall":37,"team":"Zach","label":"4.37","wave":4},{"overall":38,"team":"Ryan","label":"4.38","wave":4},{"overall":39,"team":"Brett","label":"4.39","wave":4},{"overall":40,"team":"Justin","label":"4.4","wave":4},{"overall":41,"team":"Aarron","label":"4.41","wave":4},{"overall":42,"team":"Ringler","label":"4.42","wave":4},{"overall":43,"team":"Gabe","label":"4.43","wave":4},{"overall":44,"team":"Aarron","label":"4.44","wave":4},{"overall":45,"team":"Mitch","label":"4.45","wave":4},{"overall":46,"team":"Swaye","label":"4.46","wave":4},{"overall":47,"team":"Mitch","label":"4.47","wave":4},{"overall":48,"team":"Jake","label":"4.48","wave":4},{"overall":49,"team":"Jake","label":"5.49","wave":5},{"overall":50,"team":"Mitch","label":"5.5","wave":5},{"overall":51,"team":"Swaye","label":"5.51","wave":5},{"overall":52,"team":"Mitch","label":"5.52","wave":5},{"overall":53,"team":"Aarron","label":"5.53","wave":5},{"overall":54,"team":"Gabe","label":"5.54","wave":5},{"overall":55,"team":"Burman","label":"5.55","wave":5},{"overall":56,"team":"Aarron","label":"5.56","wave":5},{"overall":57,"team":"Justin","label":"5.57","wave":5},{"overall":58,"team":"Brett","label":"5.58","wave":5},{"overall":59,"team":"Ryan","label":"5.59","wave":5},{"overall":60,"team":"Zach","label":"5.6","wave":5},{"overall":61,"team":"Zach","label":"6.61","wave":6},{"overall":62,"team":"Ryan","label":"6.62","wave":6},{"overall":63,"team":"Brett","label":"6.63","wave":6},{"overall":64,"team":"Justin","label":"6.64","wave":6},{"overall":65,"team":"Unassigned","label":"not recorded in tracker","wave":6},{"overall":66,"team":"Burman","label":"6.66","wave":6},{"overall":67,"team":"Gabe","label":"6.67","wave":6},{"overall":68,"team":"Martell","label":"6.68","wave":6},{"overall":69,"team":"Martell","label":"6.69","wave":6},{"overall":70,"team":"Swaye","label":"6.7","wave":6},{"overall":71,"team":"Burman","label":"6.71","wave":6},{"overall":72,"team":"Jake","label":"6.72","wave":6},{"overall":73,"team":"Jake","label":"7.73","wave":7},{"overall":74,"team":"Ringler","label":"7.74","wave":7},{"overall":75,"team":"Swaye","label":"7.75","wave":7},{"overall":76,"team":"Mitch","label":"7.76","wave":7},{"overall":77,"team":"Aarron","label":"7.77","wave":7},{"overall":78,"team":"Gabe","label":"7.78","wave":7},{"overall":79,"team":"Burman","label":"7.79","wave":7},{"overall":80,"team":"Martell","label":"7.8","wave":7},{"overall":81,"team":"Justin","label":"7.81","wave":7},{"overall":82,"team":"Brett","label":"7.82","wave":7},{"overall":83,"team":"Ryan","label":"7.83","wave":7},{"overall":84,"team":"Zach","label":"7.84","wave":7},{"overall":85,"team":"Zach","label":"8.85","wave":8},{"overall":86,"team":"Ryan","label":"8.86","wave":8},{"overall":87,"team":"Brett","label":"8.87","wave":8},{"overall":88,"team":"Justin","label":"8.88","wave":8},{"overall":89,"team":"Aarron","label":"8.89","wave":8},{"overall":90,"team":"Burman","label":"8.9","wave":8},{"overall":91,"team":"Gabe","label":"8.91","wave":8},{"overall":92,"team":"Martell","label":"8.92","wave":8},{"overall":93,"team":"Mitch","label":"8.93","wave":8},{"overall":94,"team":"Swaye","label":"8.94","wave":8},{"overall":95,"team":"Ringler","label":"8.95","wave":8},{"overall":96,"team":"Jake","label":"8.96","wave":8},{"overall":97,"team":"Jake","label":"9.97","wave":9},{"overall":98,"team":"Mitch","label":"9.98","wave":9},{"overall":99,"team":"Swaye","label":"9.99","wave":9},{"overall":100,"team":"Mitch","label":"9.1","wave":9},{"overall":101,"team":"Martell","label":"9.101","wave":9},{"overall":102,"team":"Gabe","label":"9.102","wave":9},{"overall":103,"team":"Burman","label":"9.103","wave":9},{"overall":104,"team":"Aarron","label":"9.104","wave":9},{"overall":105,"team":"Justin","label":"9.105","wave":9},{"overall":106,"team":"Brett","label":"9.106","wave":9},{"overall":107,"team":"Ryan","label":"9.107","wave":9},{"overall":108,"team":"Zach","label":"9.108","wave":9},{"overall":109,"team":"Zach","label":"10.109","wave":10},{"overall":110,"team":"Ryan","label":"10.11","wave":10},{"overall":111,"team":"Brett","label":"10.111","wave":10},{"overall":112,"team":"Justin","label":"10.112","wave":10},{"overall":113,"team":"Aarron","label":"10.113","wave":10},{"overall":114,"team":"Burman","label":"10.114","wave":10},{"overall":115,"team":"Martell","label":"10.115","wave":10},{"overall":116,"team":"Gabe","label":"10.116","wave":10},{"overall":117,"team":"Mitch","label":"10.117","wave":10},{"overall":118,"team":"Swaye","label":"10.118","wave":10},{"overall":119,"team":"Ringler","label":"10.119","wave":10},{"overall":120,"team":"Jake","label":"10.12","wave":10},{"overall":121,"team":"Jake","label":"11.121","wave":11},{"overall":122,"team":"Ringler","label":"11.122","wave":11},{"overall":123,"team":"Swaye","label":"11.123","wave":11},{"overall":124,"team":"Mitch","label":"11.124","wave":11},{"overall":125,"team":"Martell","label":"11.125","wave":11},{"overall":126,"team":"Gabe","label":"11.126","wave":11},{"overall":127,"team":"Burman","label":"11.127","wave":11},{"overall":128,"team":"Aarron","label":"11.128","wave":11},{"overall":129,"team":"Justin","label":"11.129","wave":11},{"overall":130,"team":"Brett","label":"11.13","wave":11},{"overall":131,"team":"Ryan","label":"11.131","wave":11},{"overall":132,"team":"Zach","label":"11.132","wave":11},{"overall":133,"team":"Zach","label":"12.133","wave":12},{"overall":134,"team":"Ryan","label":"12.134","wave":12},{"overall":135,"team":"Brett","label":"12.135","wave":12},{"overall":136,"team":"Justin","label":"12.136","wave":12},{"overall":137,"team":"Aarron","label":"12.137","wave":12},{"overall":138,"team":"Burman","label":"12.138","wave":12},{"overall":139,"team":"Gabe","label":"12.139","wave":12},{"overall":140,"team":"Martell","label":"12.14","wave":12},{"overall":141,"team":"Mitch","label":"12.141","wave":12},{"overall":142,"team":"Swaye","label":"12.142","wave":12},{"overall":143,"team":"Ringler","label":"12.143","wave":12},{"overall":144,"team":"Jake","label":"12.144","wave":12},{"overall":145,"team":"Jake","label":"13.145","wave":13},{"overall":146,"team":"Ringler","label":"13.146","wave":13},{"overall":147,"team":"Swaye","label":"13.147","wave":13},{"overall":148,"team":"Mitch","label":"13.148","wave":13},{"overall":149,"team":"Gabe","label":"13.149","wave":13},{"overall":150,"team":"Martell","label":"13.15","wave":13},{"overall":151,"team":"Burman","label":"13.151","wave":13},{"overall":152,"team":"Aarron","label":"13.152","wave":13},{"overall":153,"team":"Justin","label":"13.153","wave":13},{"overall":154,"team":"Brett","label":"13.154","wave":13},{"overall":155,"team":"Ryan","label":"13.155","wave":13},{"overall":156,"team":"Zach","label":"13.156","wave":13},{"overall":157,"team":"Zach","label":"14.157","wave":14},{"overall":158,"team":"Ryan","label":"14.158","wave":14},{"overall":159,"team":"Brett","label":"14.159","wave":14},{"overall":160,"team":"Justin","label":"14.16","wave":14},{"overall":161,"team":"Aarron","label":"14.161","wave":14},{"overall":162,"team":"Burman","label":"14.162","wave":14},{"overall":163,"team":"Gabe","label":"14.163","wave":14},{"overall":164,"team":"Martell","label":"14.164","wave":14},{"overall":165,"team":"Mitch","label":"14.165","wave":14},{"overall":166,"team":"Swaye","label":"14.166","wave":14},{"overall":167,"team":"Ringler","label":"14.167","wave":14},{"overall":168,"team":"Jake","label":"14.168","wave":14},{"overall":169,"team":"Jake","label":"15.169","wave":15},{"overall":170,"team":"Ringler","label":"15.17","wave":15},{"overall":171,"team":"Swaye","label":"15.171","wave":15},{"overall":172,"team":"Mitch","label":"15.172","wave":15},{"overall":173,"team":"Martell","label":"15.173","wave":15},{"overall":174,"team":"Gabe","label":"15.174","wave":15},{"overall":175,"team":"Burman","label":"15.175","wave":15},{"overall":176,"team":"Aarron","label":"15.176","wave":15},{"overall":177,"team":"Justin","label":"15.177","wave":15},{"overall":178,"team":"Brett","label":"15.178","wave":15},{"overall":179,"team":"Ryan","label":"15.179","wave":15},{"overall":180,"team":"Zach","label":"15.18","wave":15},{"overall":181,"team":"Zach","label":"R16 (new round, added after your update)","wave":16},{"overall":182,"team":"Ryan","label":"R16 (new round, added after your update)","wave":16},{"overall":183,"team":"Brett","label":"R16 (new round, added after your update)","wave":16},{"overall":184,"team":"Justin","label":"R16 (new round, added after your update)","wave":16},{"overall":185,"team":"Aarron","label":"R16 (new round, added after your update)","wave":16},{"overall":186,"team":"Burman","label":"R16 (new round, added after your update)","wave":16},{"overall":187,"team":"Gabe","label":"R16 (new round, added after your update)","wave":16},{"overall":188,"team":"Martell","label":"R16 (new round, added after your update)","wave":16},{"overall":189,"team":"Mitch","label":"R16 (new round, added after your update)","wave":16},{"overall":190,"team":"Swaye","label":"R16 (new round, added after your update)","wave":16},{"overall":191,"team":"Ringler","label":"R16 (new round, added after your update)","wave":16},{"overall":192,"team":"Jake","label":"R16 (new round, added after your update)","wave":16}];
+const OWNERS = ["Jake","Ringler","Swaye","Mitch","Martell","Gabe","Burman","Aarron","Justin","Brett","Ryan","Zach","Unassigned"];
+const ORIGINAL_TRADES = [
+  {sender:"Aarron", sent:["1.08","3.29","7.80"], receiver:"Martell", received:["2.17","4.44","5.53","7.77"], note:"Trade down for extra Second"},
+  {sender:"Mitch", sent:["3.28","6.71"], receiver:"Ringler", received:["4.47","5.50","9.98"], note:""},
+  {sender:"Ringler", sent:["1.02","6.69"], receiver:"Martell", received:["1.05","3.29"], note:"I love Josh Martell - Max"},
+  {sender:"Gabe", sent:["10.115","13.150"], receiver:"Martell", received:["10.116","13.49"], note:""},
+  {sender:"Ringler", sent:["1.05","6.71"], receiver:"Burman", received:["1.07","4.42"], note:""}
+];
+const DEFAULT_PIN = "AEPI26";
+const DEFAULT_STATE = {draftedPicks:{}, liveTrades:[], customPlayers:[], adminPin: DEFAULT_PIN};
+let state = null; // filled in by Firestore's first snapshot -- see PERSISTENCE below
+let isAdmin = false;
+let currentTab = "board";
+let currentPos = "ALL";
+let tradeSelA = {team:null, picks:new Set()};
+let tradeSelB = {team:null, picks:new Set()};
+let myTeam = null; // this device's claimed team (personal, not shared) — for trade attribution
+const MY_TEAM_KEY = "my-team-claim";
+const UI_STATE_KEY = "draft-ui-state";
+/* ================= PERSISTENCE =================
+   Real-time shared state via Firestore: one document holds the whole
+   mutable board (drafted picks, live trades, custom players, admin PIN).
+   Every open tab subscribes with onSnapshot, so a write from ANY device
+   reaches every other open tab in well under a second -- no publish/reload
+   cycle, no pinned-version staleness, no polling. Writes are last-write-wins
+   (fine for a friendly draft with a handful of concurrent editors); if this
+   ever needs to be airtight under heavy concurrent writes, swap publishState
+   for a Firestore transaction (runTransaction) instead. */
+let db = null;
+let stateRef = null;
+function initFirebase(){
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    stateRef = db.collection("draft").doc("state");
+  }catch(e){
+    console.error("Firebase init failed", e);
+    toast("Couldn't connect to the live board — check firebaseConfig.");
+    return;
+  }
+  stateRef.onSnapshot(
+    snap => {
+      if(snap.exists){
+        state = snap.data();
+      } else {
+        // first-ever load for this project: seed the document
+        state = Object.assign({}, DEFAULT_STATE);
+        stateRef.set(state).catch(e=> console.error("seed failed", e));
+      }
+      const overlay = document.getElementById("loadingOverlay");
+      if(overlay) overlay.remove();
+      renderAll();
+    },
+    err => {
+      console.error("onSnapshot error", err);
+      toast("Lost connection to the live board — check your Firestore rules.");
+    }
+  );
+}
+// Push the current in-memory `state` to everyone. Firestore's onSnapshot
+// fires for this tab too (from local cache, near-instantly) as well as
+// every other open tab, so callers don't need to call renderAll() themselves
+// after this resolves -- it's harmless if they do (renderAll() is cheap).
+async function publishState(){
+  if(!stateRef){
+    toast("Not connected to the live board yet — try again in a moment.");
+    return {ok:false};
+  }
+  try{
+    await stateRef.set(state);
+    return {ok:true};
+  }catch(e){
+    console.error("publish failed", e);
+    toast("Couldn't save your change — check your connection and try again.");
+    return {ok:false, error:e};
+  }
+}
+/* ---- small per-tab UI memory (which tab/filter you're on, whether you're
+   unlocked as admin) so a manual browser refresh doesn't dump you back to
+   the Board tab or lock you out of admin ---- */
+function saveUiState(){
+  try{ sessionStorage.setItem(UI_STATE_KEY, JSON.stringify({isAdmin, currentTab, currentPos})); }
+  catch(e){}
+}
+function restoreUiState(){
+  try{
+    const raw = sessionStorage.getItem(UI_STATE_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    if(saved.isAdmin) isAdmin = true;
+    if(saved.currentPos) currentPos = saved.currentPos;
+    if(saved.currentTab) currentTab = saved.currentTab;
+  }catch(e){}
+}
+// Sync is push-based and near-instant, so this is just a belt-and-braces
+// escape hatch (e.g. the Firestore socket got stuck) -- a plain reload.
+function refreshBoard(){
+  saveUiState();
+  location.reload();
+}
+/* ================= DERIVED ORDER ================= */
+function effectiveOrder(){
+  const owner = {};
+  BASE_ORDER.forEach(p=> owner[p.overall] = p.team);
+  state.liveTrades.filter(t=> t.status==='approved' || !t.status).forEach(t=>{
+    t.picksA.forEach(ov => owner[ov] = t.teamB);
+    t.picksB.forEach(ov => owner[ov] = t.teamA);
+  });
+  return BASE_ORDER.map(p=> Object.assign({}, p, {
+    effTeam: owner[p.overall],
+    traded: owner[p.overall] !== p.team
+  }));
+}
+function currentPickIndex(order){
+  for(let i=0;i<order.length;i++){
+    if(!state.draftedPicks[order[i].overall]) return i;
+  }
+  return -1;
+}
+function draftedPlayerIds(){
+  return new Set(Object.values(state.draftedPicks).map(d=>d.playerId));
+}
+function findPlayer(id){
+  if(id===null || id===undefined) return null;
+  return PLAYERS.find(p=>p.id===id) || (state.customPlayers||[]).find(p=>p.id===id) || null;
+}
+/* ================= TEAM CLAIM (lightweight per-device identity, not real auth) ================= */
+async function loadMyTeam(){
+  let neverAsked = true;
+  try{
+    const v = localStorage.getItem(MY_TEAM_KEY);
+    if(v !== null){
+      neverAsked = false;
+      if(v !== '__SKIP__') myTeam = v;
+    }
+  }catch(e){ /* nothing claimed yet on this device */ }
+  renderMyTeamPill();
+  return neverAsked;
+}
+async function saveMyTeam(value){
+  try{
+    localStorage.setItem(MY_TEAM_KEY, value);
+  }catch(e){ /* non-fatal — attribution is a convenience, not critical */ }
+}
+async function claimTeam(){
+  const REAL_OWNERS = OWNERS.filter(o=>o!=='Unassigned');
+  const result = await showModal({
+    title: myTeam ? "Change your team" : "Which team are you?",
+    message: "This just labels trades you submit as coming from your team — it isn't a password, so anyone at your team's device can still act for you.",
+    options: REAL_OWNERS,
+    confirmLabel: "Save",
+    showSkip: true
+  });
+  if(result === null) return; // cancelled
+  if(result === '__SKIP__'){
+    await saveMyTeam('__SKIP__');
+    return;
+  }
+  myTeam = result;
+  await saveMyTeam(result);
+  renderMyTeamPill();
+  toast("You're set as "+result+".");
+}
+function renderMyTeamPill(){
+  const pill = document.getElementById("myTeamPill");
+  if(!pill) return;
+  pill.textContent = myTeam ? ("🏷 "+myTeam) : "🏷 Set your team";
+}
+/* ================= ADMIN ================= */
+async function toggleAdmin(){
+  if(isAdmin){
+    isAdmin = false;
+    saveUiState();
+    renderAll();
+    return;
+  }
+  const pin = await showModal({
+    title:"Admin Login",
+    message:"Enter the admin PIN to unlock draft picks, undo, and reset.",
+    withInput:true,
+    placeholder:"PIN",
+    confirmLabel:"Unlock"
+  });
+  if(pin === null) return;
+  if(pin === state.adminPin){
+    isAdmin = true;
+    saveUiState();
+    toast("Admin unlocked.");
+    renderAll();
+  } else {
+    toast("Incorrect PIN.");
+  }
+}
+async function changePin(){
+  if(!isAdmin) return;
+  const np = await showModal({
+    title:"Set Admin PIN",
+    message:"Choose a new admin PIN. Share it only with whoever is running the draft.",
+    withInput:true,
+    placeholder:"New PIN",
+    confirmLabel:"Save"
+  });
+  if(np && np.trim()){
+    state.adminPin = np.trim();
+    await publishState();
+    toast("Admin PIN updated.");
+  }
+}
+/* ================= TABS / FILTERS ================= */
+function setTab(t){
+  currentTab = t;
+  document.querySelectorAll(".tab").forEach(el=> el.classList.toggle("active", el.dataset.tab===t));
+  ["board","order","trades","rosters"].forEach(name=>{
+    document.getElementById("tab-"+name).style.display = (name===t) ? "block":"none";
+  });
+  saveUiState();
+  renderAll();
+}
+function setPos(p){
+  currentPos = p;
+  document.querySelectorAll(".pos-btn").forEach(el=> el.classList.toggle("active", el.dataset.pos===p));
+  saveUiState();
+  renderBoard();
+}
+/* ================= RENDER: SCOREBOARD ================= */
+function renderClock(){
+  const order = effectiveOrder();
+  const idx = currentPickIndex(order);
+  const advanceBtn = document.getElementById("advanceBtn");
+  if(idx === -1){
+    document.getElementById("clockTeam").textContent = "DRAFT COMPLETE";
+    document.getElementById("clockPick").textContent = "✓";
+    document.getElementById("clockRound").textContent = order.length+" / "+order.length;
+    advanceBtn.style.display = "none";
+  } else {
+    const pick = order[idx];
+    document.getElementById("clockTeam").textContent = pick.effTeam;
+    document.getElementById("clockPick").textContent = "#"+pick.overall;
+    document.getElementById("clockRound").textContent = "Round "+pick.wave+" · Pick "+(((pick.overall-1)%12)+1);
+    advanceBtn.style.display = isAdmin ? "inline-block" : "none";
+  }
+  document.getElementById("adminPill").textContent = isAdmin ? "🔓 Admin" : "🔒 Admin";
+  document.getElementById("adminPill").classList.toggle("active", isAdmin);
+  document.getElementById("pinPill").style.display = isAdmin ? "inline-block" : "none";
+}
+/* ================= RENDER: BOARD ================= */
+function renderBoard(){
+  if(!state) return; // first Firestore snapshot hasn't arrived yet
+  const order = effectiveOrder();
+  const idx = currentPickIndex(order);
+  const onClockTeam = idx>=0 ? order[idx].effTeam : null;
+  renderCustomPickBar(onClockTeam, idx);
+  const drafted = draftedPlayerIds();
+  const searchEl = document.getElementById("searchBox");
+  const hideEl = document.getElementById("hideDrafted");
+  const q = (searchEl.value || "").toLowerCase();
+  const hideDraftedSel = hideEl.value === "hide";
+  let list = PLAYERS.filter(p=>{
+    if(currentPos !== "ALL" && p.pos !== currentPos) return false;
+    if(q && !(p.name.toLowerCase().includes(q) || (p.nflTeam||"").toLowerCase().includes(q))) return false;
+    if(hideDraftedSel && drafted.has(p.id)) return false;
+    return true;
+  });
+  list.sort((a,b)=> a.tier-b.tier || a.name.localeCompare(b.name));
+  const body = document.getElementById("boardBody");
+  if(list.length===0){
+    body.innerHTML = '<tr><td colspan="4" class="empty-hint">No players match your filters.</td></tr>';
+  } else {
+    body.innerHTML = list.map(p=>{
+      const isDrafted = drafted.has(p.id);
+      let ownerTag = "";
+      if(isDrafted){
+        const entry = Object.entries(state.draftedPicks).find(([ov,d])=> d.playerId===p.id);
+        if(entry) ownerTag = '<span class="owned-tag">to '+entry[1].team+' (#'+entry[0]+')</span>';
+      }
+      const btn = isDrafted
+        ? '<span class="owned-tag">Drafted</span>'
+        : (isAdmin
+            ? '<button class="draft-btn" data-action="draft" data-id="'+p.id+'" '+(onClockTeam?'':'disabled')+'>Draft to '+(onClockTeam||"—")+'</button>'
+            : '<span class="owned-tag">on board</span>');
+      return '<tr class="'+(isDrafted?'drafted':'')+'">'+
+        '<td><span class="pname">'+escapeHtml(p.name)+'</span>'+(ownerTag?'<br>'+ownerTag:'')+'</td>'+
+        '<td><span class="pos-chip '+p.pos+'">'+p.pos+'</span></td>'+
+        '<td style="color:var(--chalk-dim); font-size:12px;">'+escapeHtml(p.nflTeam||"")+'</td>'+
+        '<td>'+btn+'</td>'+
+      '</tr>';
+    }).join("");
+  }
+  const mini = document.getElementById("miniOrder");
+  const upcoming = order.slice(Math.max(idx,0), idx+12);
+  mini.innerHTML = upcoming.map((p,i)=>{
+    const real_i = idx+i;
+    return orderRowHtml(p, real_i===idx, false);
+  }).join("");
+}
+let _customBarTeam = undefined;
+function renderCustomPickBar(onClockTeam, idx){
+  const bar = document.getElementById("customPickBar");
+  if(!isAdmin || idx===-1){
+    bar.style.display = "none";
+    _customBarTeam = undefined;
+    return;
+  }
+  bar.style.display = "flex";
+  bar.className = "custom-pick-bar";
+  const needsFullBuild = (_customBarTeam !== onClockTeam) || !bar.querySelector('#customName');
+  if(needsFullBuild){
+    bar.innerHTML =
+      '<span class="cp-label">Off-board pick →</span>'+
+      '<input class="search-input" id="customName" placeholder="Player name" style="flex:1; min-width:140px;">'+
+      '<select id="customPos">'+
+        '<option value="QB">QB</option><option value="RB">RB</option><option value="WR">WR</option>'+
+        '<option value="TE">TE</option><option value="K">K</option><option value="DST">DST</option>'+
+        '<option value="OTHER" selected>Other</option>'+
+      '</select>'+
+      '<button class="draft-btn" data-action="draft-custom">Draft to '+(onClockTeam||"—")+'</button>';
+    _customBarTeam = onClockTeam;
+  }
+}
+async function submitCustomPick(){
+  if(!isAdmin){ toast("Admin only."); return; }
+  const nameEl = document.getElementById("customName");
+  const posEl = document.getElementById("customPos");
+  if(!nameEl) return;
+  const name = nameEl.value.trim();
+  if(!name){ toast("Type the player's name first."); return; }
+  const order = effectiveOrder();
+  const idx = currentPickIndex(order);
+  if(idx===-1){ toast("Draft is already complete."); return; }
+  const pick = order[idx];
+  const customId = "c"+Date.now()+Math.floor(Math.random()*1000);
+  const player = {id: customId, name, pos: posEl.value, nflTeam:"", tier:6, custom:true};
+  state.customPlayers = (state.customPlayers||[]).concat([player]);
+  state.draftedPicks[pick.overall] = {playerId: customId, team: pick.effTeam, ts: Date.now()};
+  await publishState();
+  renderAll();
+  toast(name+" drafted to "+pick.effTeam+".");
+}
+function orderRowHtml(p, isCurrent, isDone){
+  const pick = state.draftedPicks[p.overall];
+  let playerName = "";
+  if(pick){
+    if(pick.skipped) playerName = "(advanced — no player logged)";
+    else playerName = (findPlayer(pick.playerId)||{}).name || "";
+  }
+  return '<div class="order-row '+(isCurrent?'current':'')+' '+(pick?'done':'')+'">'+
+    '<span class="order-num">R'+p.wave+' · #'+p.overall+'</span>'+
+    '<span class="order-team">'+p.effTeam+(p.traded?'<span class="order-traded">TRD</span>':'')+'</span>'+
+    '<span class="order-player">'+(playerName ? escapeHtml(playerName) : (isCurrent?'on the clock':''))+'</span>'+
+  '</div>';
+}
+/* ================= RENDER: FULL ORDER TAB ================= */
+function renderFullOrder(){
+  const order = effectiveOrder();
+  const idx = currentPickIndex(order);
+  const el = document.getElementById("fullOrder");
+  el.innerHTML = order.map((p,i)=> orderRowHtml(p, i===idx, !!state.draftedPicks[p.overall])).join("");
+}
+/* ================= RENDER: TRADES TAB (open to everyone) ================= */
+function renderTrades(){
+  const origEl = document.getElementById("origTrades");
+  origEl.innerHTML = ORIGINAL_TRADES.map(t=>{
+    return '<div class="trade-card"><div class="trade-title">'+t.sender+' &harr; '+t.receiver+'</div>'+
+      '<div class="trade-flow">'+t.sender+' sends '+t.sent.join(", ")+' &rarr; receives '+t.received.join(", ")+'</div>'+
+      (t.note? '<div class="trade-note">"'+escapeHtml(t.note)+'"</div>' : '')+
+    '</div>';
+  }).join("");
+  const order = effectiveOrder();
+  const undraftedByTeam = {};
+  OWNERS.forEach(o=> undraftedByTeam[o]=[]);
+  order.forEach(p=>{ if(!state.draftedPicks[p.overall]) undraftedByTeam[p.effTeam].push(p); });
+  window._undraftedByTeam = undraftedByTeam;
+  if(!tradeSelA.team && myTeam && OWNERS.includes(myTeam)) tradeSelA.team = myTeam;
+  const formEl = document.getElementById("liveTradeForm");
+  const prevNoteEl = document.getElementById("tradeNote");
+  const prevNote = prevNoteEl ? prevNoteEl.value : "";
+  formEl.innerHTML =
+    '<div class="trade-card">'+
+    '<div class="form-row">'+
+      '<div><label>Team A</label><select id="teamA" data-action="team-select" data-which="A">'+teamOptions(tradeSelA.team)+'</select></div>'+
+      '<div><label>Team B</label><select id="teamB" data-action="team-select" data-which="B">'+teamOptions(tradeSelB.team)+'</select></div>'+
+    '</div>'+
+    '<label>Picks Team A sends to B</label>'+
+    '<div class="pick-checks" id="picksA"></div>'+
+    '<label style="margin-top:8px; display:block;">Picks Team B sends to A</label>'+
+    '<div class="pick-checks" id="picksB"></div>'+
+    '<div class="form-row" style="margin-top:10px;">'+
+      '<div style="flex:1;"><label>Note (optional)</label><input class="search-input" id="tradeNote" placeholder="e.g. moving up for a QB"></div>'+
+    '</div>'+
+    '<button class="btn primary" data-action="submit-trade">Record Trade</button>'+
+    '<div class="trade-note" style="margin-top:8px;">'+(isAdmin ? 'As admin, trades you record are approved immediately.' : 'Any team can propose a trade here — it takes effect once the admin approves it.')+' Only undrafted picks are tradeable.</div>'+
+    '</div>';
+  const newNoteEl = document.getElementById("tradeNote");
+  if(newNoteEl && prevNote) newNoteEl.value = prevNote;
+  renderPickChecks();
+  const pending = state.liveTrades.filter(t=> t.status==='pending');
+  const approved = state.liveTrades.filter(t=> t.status==='approved' || !t.status);
+  const rejected = state.liveTrades.filter(t=> t.status==='rejected');
+  const pendingEl = document.getElementById("pendingTrades");
+  if(pendingEl){
+    if(pending.length===0){
+      pendingEl.innerHTML = '<div class="empty-hint">No trades waiting on approval.</div>';
+    } else {
+      pendingEl.innerHTML = pending.slice().reverse().map(t=> tradeCardHtml(t, true)).join("");
+    }
+  }
+  const liveEl = document.getElementById("liveTrades");
+  const approvedAndRejected = approved.slice().reverse().concat(rejected.slice().reverse());
+  if(approvedAndRejected.length===0){
+    liveEl.innerHTML = '<div class="empty-hint">No live trades recorded yet this draft.</div>';
+  } else {
+    liveEl.innerHTML = approvedAndRejected.map(t=> tradeCardHtml(t, false)).join("");
+  }
+}
+function tradeCardHtml(t, showApproveReject){
+  const statusBadge = t.status==='rejected'
+    ? '<span style="color:var(--danger); font-size:10px; font-family:\'Space Mono\',monospace; margin-left:6px;">REJECTED</span>'
+    : (t.status==='pending' ? '<span style="color:var(--amber); font-size:10px; font-family:\'Space Mono\',monospace; margin-left:6px;">PENDING</span>' : '');
+  const adminActions = isAdmin
+    ? (showApproveReject
+        ? ' <span style="float:right;">'+
+            '<span style="cursor:pointer; color:var(--amber); margin-right:10px;" data-action="approve-trade" data-id="'+t.id+'">approve</span>'+
+            '<span style="cursor:pointer; color:var(--danger);" data-action="reject-trade" data-id="'+t.id+'">reject</span>'+
+          '</span>'
+        : ' <span style="float:right; cursor:pointer; color:var(--danger);" data-action="remove-trade" data-id="'+t.id+'">remove</span>')
+    : '';
+  const cardStyle = t.status==='rejected' ? ' style="opacity:0.5;"' : '';
+  const proposedByLine = t.proposedBy
+    ? '<div class="trade-note" style="opacity:0.8;">Proposed by '+escapeHtml(t.proposedBy)+'</div>'
+    : '';
+  return '<div class="trade-card"'+cardStyle+'>'+
+    '<div class="trade-title">'+t.teamA+' &harr; '+t.teamB+statusBadge+adminActions+'</div>'+
+    '<div class="trade-flow">'+t.teamA+' sends #'+t.picksA.join(", #")+' &rarr; receives #'+t.picksB.join(", #")+'</div>'+
+    proposedByLine+
+    (t.note? '<div class="trade-note">"'+escapeHtml(t.note)+'"</div>' : '')+
+  '</div>';
+}
+function teamOptions(selected){
+  return '<option value="">Select…</option>'+OWNERS.map(o=> '<option value="'+o+'" '+(o===selected?'selected':'')+'>'+o+'</option>').join("");
+}
+function onTeamSelect(which){
+  const val = document.getElementById("team"+which).value;
+  if(which==='A'){ tradeSelA.team=val; tradeSelA.picks=new Set(); }
+  else { tradeSelB.team=val; tradeSelB.picks=new Set(); }
+  renderPickChecks();
+}
+function renderPickChecks(){
+  const a = document.getElementById("picksA");
+  const b = document.getElementById("picksB");
+  if(!a || !b) return;
+  const listA = tradeSelA.team ? (window._undraftedByTeam[tradeSelA.team]||[]) : [];
+  const listB = tradeSelB.team ? (window._undraftedByTeam[tradeSelB.team]||[]) : [];
+  a.innerHTML = listA.length ? listA.map(p=> pickCheckHtml(p, tradeSelA.picks, 'A')).join("") : '<span class="empty-hint">Select Team A</span>';
+  b.innerHTML = listB.length ? listB.map(p=> pickCheckHtml(p, tradeSelB.picks, 'B')).join("") : '<span class="empty-hint">Select Team B</span>';
+}
+function pickCheckHtml(p, set, which){
+  const sel = set.has(p.overall);
+  return '<span class="pick-check '+(sel?'sel':'')+'" data-action="toggle-pick" data-ov="'+p.overall+'" data-which="'+which+'">R'+p.wave+' #'+p.overall+'</span>';
+}
+function togglePick(ov, which){
+  const set = which==='A' ? tradeSelA.picks : tradeSelB.picks;
+  set.has(ov) ? set.delete(ov) : set.add(ov);
+  renderPickChecks();
+}
+async function submitTrade(){
+  if(!tradeSelA.team || !tradeSelB.team || tradeSelA.team===tradeSelB.team){
+    toast("Pick two different teams."); return;
+  }
+  if(tradeSelA.picks.size===0 && tradeSelB.picks.size===0){
+    toast("Select at least one pick to swap."); return;
+  }
+  const noteEl = document.getElementById("tradeNote");
+  const note = noteEl ? noteEl.value.trim() : "";
+  const status = isAdmin ? "approved" : "pending";
+  const newTrade = {
+    id: 't'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
+    teamA: tradeSelA.team, picksA: Array.from(tradeSelA.picks),
+    teamB: tradeSelB.team, picksB: Array.from(tradeSelB.picks),
+    note, ts: Date.now(), status, proposedBy: myTeam || null
+  };
+  tradeSelA = {team:null, picks:new Set()};
+  tradeSelB = {team:null, picks:new Set()};
+  state.liveTrades.push(newTrade);
+  const result = await publishState();
+  if(result.ok){
+    toast(status==='approved' ? "Trade recorded." : "Trade submitted — waiting on admin approval.");
+  } else {
+    toast("Trade may not have saved — check your connection and try again.");
+  }
+  renderAll();
+}
+async function approveTrade(id){
+  if(!isAdmin) return;
+  const t = state.liveTrades.find(x=>x.id===id);
+  if(!t) return;
+  t.status = "approved";
+  await publishState();
+  renderAll();
+  toast("Trade approved.");
+}
+async function rejectTrade(id){
+  if(!isAdmin) return;
+  const t = state.liveTrades.find(x=>x.id===id);
+  if(!t) return;
+  t.status = "rejected";
+  await publishState();
+  renderAll();
+  toast("Trade rejected.");
+}
+async function removeTrade(id){
+  if(!isAdmin) return;
+  state.liveTrades = state.liveTrades.filter(t=>t.id!==id);
+  await publishState();
+  renderAll();
+}
+/* ================= RENDER: ROSTERS ================= */
+function renderRosters(){
+  const grid = document.getElementById("rosterGrid");
+  const byTeam = {};
+  OWNERS.forEach(o=> byTeam[o]=[]);
+  Object.entries(state.draftedPicks).forEach(([ov,d])=>{
+    if(!byTeam[d.team]) byTeam[d.team]=[];
+    const player = d.playerId ? findPlayer(d.playerId) : null;
+    byTeam[d.team].push({ov, player, skipped: !!d.skipped});
+  });
+  grid.innerHTML = OWNERS.map(team=>{
+    const roster = (byTeam[team]||[]).sort((a,b)=> a.ov-b.ov);
+    return '<div class="roster-card"><h3>'+team+'<span class="rcount">'+roster.length+' picks</span></h3>'+
+      (roster.length===0 ? '<div class="empty-hint">No picks yet</div>' :
+        roster.map(r=> r.player
+          ? '<div class="roster-row"><span class="nm">'+escapeHtml(r.player.name)+' <span class="pos-chip '+r.player.pos+'" style="font-size:9px;">'+r.player.pos+'</span></span><span class="pk">#'+r.ov+'</span></div>'
+          : '<div class="roster-row"><span class="nm" style="color:var(--chalk-dim); font-style:italic;">(advanced — no player logged)</span><span class="pk">#'+r.ov+'</span></div>'
+        ).join("")
+      )+
+    '</div>';
+  }).join("");
+}
+/* ================= ACTIONS ================= */
+async function draftPlayer(playerId){
+  if(!isAdmin){ toast("Admin only — unlock admin to draft players."); return; }
+  const order = effectiveOrder();
+  const idx = currentPickIndex(order);
+  if(idx===-1){ toast("Draft is already complete."); return; }
+  if(draftedPlayerIds().has(playerId)){ toast("Player already drafted."); return; }
+  const pick = order[idx];
+  state.draftedPicks[pick.overall] = {playerId, team: pick.effTeam, ts: Date.now()};
+  await publishState();
+  renderAll();
+}
+async function advancePick(){
+  if(!isAdmin){ toast("Admin only."); return; }
+  const order = effectiveOrder();
+  const idx = currentPickIndex(order);
+  if(idx===-1){ toast("Draft is already complete."); return; }
+  const pick = order[idx];
+  state.draftedPicks[pick.overall] = {playerId: null, team: pick.effTeam, ts: Date.now(), skipped:true};
+  await publishState();
+  renderAll();
+  toast("Advanced past pick #"+pick.overall+" (no player logged).");
+}
+async function undoLastPick(){
+  if(!isAdmin){ toast("Admin only."); return; }
+  const keys = Object.keys(state.draftedPicks).map(Number).sort((a,b)=>a-b);
+  if(keys.length===0){ toast("Nothing to undo."); return; }
+  const last = keys[keys.length-1];
+  delete state.draftedPicks[last];
+  await publishState();
+  renderAll();
+  toast("Undid pick #"+last+".");
+}
+async function resetDraft(){
+  if(!isAdmin){ toast("Admin only."); return; }
+  const ok1 = await showModal({
+    title:"Reset entire draft?",
+    message:"This clears every pick and every live trade, for everyone, right now.",
+    confirmLabel:"Yes, reset"
+  });
+  if(!ok1) return;
+  const ok2 = await showModal({
+    title:"Are you absolutely sure?",
+    message:"This cannot be undone.",
+    confirmLabel:"Reset everything"
+  });
+  if(!ok2) return;
+  state.draftedPicks = {};
+  state.liveTrades = [];
+  await publishState();
+  renderAll();
+  toast("Draft reset.");
+}
+/* ================= EXPORT ================= */
+function exportExcel(){
+  const order = effectiveOrder();
+  const results = order.map(p=>{
+    const d = state.draftedPicks[p.overall];
+    const player = d ? findPlayer(d.playerId) : null;
+    return {
+      Overall: p.overall,
+      Round: p.wave,
+      "Pick in Round": ((p.overall-1)%12)+1,
+      Team: p.effTeam,
+      "Original Slot": p.team,
+      Traded: p.traded ? "Y":"N",
+      Player: player ? player.name : "",
+      Pos: player ? player.pos : "",
+      "NFL Team": player ? player.nflTeam : "",
+      "Drafted At": d ? new Date(d.ts).toLocaleString() : ""
+    };
+  });
+  const rosterRows = [];
+  OWNERS.forEach(team=>{
+    Object.entries(state.draftedPicks).filter(([ov,d])=>d.team===team).sort((a,b)=>a[0]-b[0]).forEach(([ov,d])=>{
+      const player = findPlayer(d.playerId);
+      rosterRows.push({Team:team, Pick:ov, Player:player?player.name:"", Pos:player?player.pos:"", "NFL Team":player?player.nflTeam:""});
+    });
+  });
+  const tradeRows = [];
+  ORIGINAL_TRADES.forEach(t=> tradeRows.push({Type:"Original", TeamA:t.sender, Sent:t.sent.join(", "), TeamB:t.receiver, Received:t.received.join(", "), Note:t.note}));
+  state.liveTrades.forEach(t=> tradeRows.push({Type:"Live", TeamA:t.teamA, Sent:t.picksA.join(", "), TeamB:t.teamB, Received:t.picksB.join(", "), Note:t.note}));
+  if(typeof XLSX === "undefined"){ toast("Export library still loading — try again in a moment."); return; }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(results), "Draft Results");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rosterRows), "Rosters");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tradeRows), "Trade Log");
+  XLSX.writeFile(wb, "AEPi_2026_Draft_Results.xlsx");
+  toast("Excel file downloading…");
+}
+/* ================= UTIL ================= */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+let toastTimer;
+function toast(msg){
+  let el = document.getElementById("toastEl");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "toastEl"; el.className = "toast";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = "block";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.style.display="none", 3200);
+}
+function renderAll(){
+  if(!state) return; // first Firestore snapshot hasn't arrived yet
+  renderClock();
+  renderPendingBadge();
+  if(currentTab==='board') renderBoard();
+  if(currentTab==='order') renderFullOrder();
+  if(currentTab==='trades') renderTrades();
+  if(currentTab==='rosters') renderRosters();
+}
+function renderPendingBadge(){
+  const badge = document.getElementById("pendingBadge");
+  if(!badge) return;
+  const count = (state.liveTrades||[]).filter(t=>t.status==='pending').length;
+  if(count>0){
+    badge.style.display = "inline-block";
+    badge.textContent = count;
+  } else {
+    badge.style.display = "none";
+  }
+}
+/* ================= MODAL (replaces prompt/confirm — sandboxed iframes often block those) ================= */
+let _modalResolve = null;
+let _modalHasInput = false;
+let _modalHasSelect = false;
+function showModal({title, message, withInput=false, placeholder='', confirmLabel='Confirm', options=null, showSkip=false}){
+  return new Promise(resolve=>{
+    _modalResolve = resolve;
+    _modalHasInput = withInput;
+    _modalHasSelect = !!options;
+    document.getElementById('modalTitle').textContent = title || '';
+    const msgEl = document.getElementById('modalMsg');
+    msgEl.textContent = message || '';
+    msgEl.style.display = message ? 'block' : 'none';
+    const inp = document.getElementById('modalInput');
+    const sel = document.getElementById('modalSelect');
+    if(options){
+      sel.innerHTML = options.map(o=>'<option value="'+o+'">'+o+'</option>').join('');
+      sel.style.display = 'block';
+      inp.style.display = 'none';
+    } else {
+      sel.style.display = 'none';
+      inp.style.display = withInput ? 'block' : 'none';
+      inp.value = '';
+      inp.placeholder = placeholder || '';
+      inp.type = withInput ? 'password' : 'text';
+    }
+    document.getElementById('modalConfirmBtn').textContent = confirmLabel || 'Confirm';
+    document.getElementById('modalSkip').style.display = showSkip ? 'inline' : 'none';
+    document.getElementById('modalBg').classList.add('open');
+    if(withInput) setTimeout(()=> inp.focus(), 60);
+  });
+}
+function closeModal(result){
+  document.getElementById('modalBg').classList.remove('open');
+  if(_modalResolve){
+    const r = _modalResolve;
+    _modalResolve = null;
+    r(result);
+  }
+}
+function confirmModal(){
+  if(_modalHasSelect){
+    closeModal(document.getElementById('modalSelect').value);
+  } else if(_modalHasInput){
+    const val = document.getElementById('modalInput').value;
+    closeModal(val);
+  } else {
+    closeModal(true);
+  }
+}
+function cancelModal(){
+  closeModal((_modalHasInput || _modalHasSelect) ? null : false);
+}
+function skipModal(){
+  closeModal('__SKIP__');
+}
+/* ================= EVENT DELEGATION (CSP-safe, no inline handlers) ================= */
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  try{
+    const action = el.dataset.action;
+    if(action === 'tab') setTab(el.dataset.tab);
+    else if(action === 'setpos') setPos(el.dataset.pos);
+    else if(action === 'toggle-admin') toggleAdmin();
+    else if(action === 'change-pin') changePin();
+    else if(action === 'export') exportExcel();
+    else if(action === 'undo') undoLastPick();
+    else if(action === 'reset') resetDraft();
+    else if(action === 'draft') draftPlayer(parseInt(el.dataset.id,10));
+    else if(action === 'draft-custom') submitCustomPick();
+    else if(action === 'advance-pick') advancePick();
+    else if(action === 'toggle-pick') togglePick(parseInt(el.dataset.ov,10), el.dataset.which);
+    else if(action === 'submit-trade') submitTrade();
+    else if(action === 'approve-trade') approveTrade(el.dataset.id);
+    else if(action === 'reject-trade') rejectTrade(el.dataset.id);
+    else if(action === 'remove-trade') removeTrade(el.dataset.id);
+    else if(action === 'modal-confirm') confirmModal();
+    else if(action === 'modal-cancel') cancelModal();
+    else if(action === 'modal-skip') skipModal();
+    else if(action === 'claim-team') claimTeam();
+    else if(action === 'refresh-now') refreshBoard();
+  }catch(err){
+    console.error(err);
+    toast("Something went wrong: "+err.message);
+  }
+});
+// click on the dimmed backdrop (but not the modal box itself) cancels
+document.getElementById('modalBg') && document.getElementById('modalBg').addEventListener('click', function(e){
+  if(e.target.id === 'modalBg') cancelModal();
+});
+document.addEventListener('keydown', function(e){
+  const bg = document.getElementById('modalBg');
+  if(!bg || !bg.classList.contains('open')) return;
+  if(e.key === 'Enter') confirmModal();
+  else if(e.key === 'Escape') cancelModal();
+});
+document.addEventListener('change', function(e){
+  const el = e.target;
+  if(el.id === 'hideDrafted') renderBoard();
+  else if(el.dataset && el.dataset.action === 'team-select') onTeamSelect(el.dataset.which);
+});
+document.addEventListener('input', function(e){
+  if(e.target.id === 'searchBox') renderBoard();
+});
+// Restore this tab's small UI memory (active tab, position filter, admin
+// unlock) before the first paint. The board itself stays blank/loading
+// until Firestore's first snapshot lands (renderBoard/renderAll no-op on
+// state===null), so it's safe to set these up immediately.
+restoreUiState();
+setPos(currentPos);
+setTab(currentTab);
+initFirebase();
+loadMyTeam().then(neverAsked=>{
+  if(neverAsked){
+    // small delay so it doesn't compete with the initial paint/board load
+    setTimeout(()=>{ claimTeam(); }, 600);
+  }
+});
+</script>
+</body>
+</html>
